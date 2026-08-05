@@ -23,7 +23,7 @@ def extract_article_lemma(wort, klarwort):
     if not match:
         return None, klarwort
     article, remainder = match.group(1).lower(), match.group(2)
-    if remainder.lower() != klarwort.lower():
+    if remainder != klarwort:
         raise ArticleMismatchError(
             f"Wort={wort!r} minus article={remainder!r} != Klarwort={klarwort!r}"
         )
