@@ -1,0 +1,24 @@
+docs/superpowers/plans/2026-08-05-trmnl-german-vocab-plugin-plan.md
+  s_0cb6b87c93d5f3::t_2e1deeaa5a90b9 903
+  s_0cb6b87c93d5f3::t_9c952ba48f7160 2289
+  s_0cb6b87c93d5f3::t_999473cbbb575e 1037-1049,1080-1082,1084-1096,1106-1108,1110,1167-1183,1200,1238,1243,1245
+  s_0cb6b87c93d5f3::t_a7264647572524 664-674,696-697,704-721,724-727,739,780,782,789,791,825
+  s_0cb6b87c93d5f3::t_12499626cee5af 843-855,901-902,904-907,920-926,948-951,954-958,964,969,972-976,980-1012,1018
+  s_0cb6b87c93d5f3::t_997317f1f0437a 214
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "24486eed131488860e0856689d0d8a18e6eded5b",
+  "prompts": {},
+  "sessions": {
+    "s_0cb6b87c93d5f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f64f8e8-c887-4c4a-8e6c-fba7dd3e5688",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
