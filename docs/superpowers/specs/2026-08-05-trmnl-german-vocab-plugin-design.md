@@ -86,18 +86,35 @@ Everything below refers to the 2,192 kept rows unless noted.
 
 ### `Detail`'s grammar sections (the emoji are delimiters, not noise)
 
-| Marker | Section | Rows | Share |
+| Marker | Section | Rows with marker | Yield a usable block |
 |---|---|---|---|
-| 🔢 | Noun Forms (singular / plural) | 1,182 | 53.9% |
-| 🔄 | Verb Conjugations | 474 | 21.6% |
-| 📊 | Degrees of Comparison | 406 | 18.5% |
-| — | no grammar section | 130 | 5.9% |
+| 🔢 | Noun Forms (singular / plural) | 1,182 | 1,182 (100%) |
+| 🔄 | Verb Conjugations | 474 | 473 |
+| 📊 | Degrees of Comparison | 406 | 327 |
+| — | no marker at all | 130 | 0 |
 
 **These sections are mutually exclusive — 0 rows contain more than one.**
-That means the card needs exactly one grammar slot, populated for 94.1% of
-words and absent for 130. The emoji are parse anchors; they must be stripped
-from rendered output since they will not render on a 2-bit grayscale e-ink
-panel.
+But "has the marker" and "yields a usable block" are not the same thing —
+verified by actually running the parser over all 2,192 rows, not just
+sampling:
+
+- **79 of the 406 `📊` rows only have a `Positive:` value**, with no
+  `Comparative:`/`Superlative:` — these are words like `wohin`, `warum`,
+  `schon` that don't inflect for comparison in German. Showing "Positive:
+  wohin" would just repeat the headline word, so these correctly yield no
+  block, not a malformed one.
+- **1 of the 474 `🔄` rows (`möchten`) has no `Partizip II:` at all** — a
+  modal verb where the source data simply omitted it.
+
+**Net: 1,982 rows (90.4%) get a real grammar block; 210 (9.6%) get none** —
+130 from no marker, 79 from comparison-without-inflection, 1 from
+verb-without-partizip. The parser must treat all three as "no block"
+outcomes, not errors — the first version of this parser, tested only
+against 3 samples per marker type, raised an exception on all 80 of the
+non-inflecting/no-partizip cases when run against the full 2,192 rows; it
+was corrected before being trusted. The emoji are parse anchors; they must
+be stripped from rendered output since they will not render on a 2-bit
+grayscale e-ink panel.
 
 ### Example cells
 
@@ -106,12 +123,27 @@ separator** (`Ich komme sofort.I'm coming right away.`). Splitting on
 "sentence-ending punctuation immediately followed by an uppercase letter":
 
 - **93.4%** (8,084) split cleanly into exactly two parts (DE | EN).
-- **6.5%** (566) split into 3+ parts — these are multiple examples spliced
-  into one cell, usually with a stray `N.` numbering artifact (580 cells
-  contain one).
-- **3 cells** are genuinely ambiguous (quoted speech whose quotes contain
-  sentence-ending punctuation), plus one junk cell literally reading
-  `Examples5.` These go to manual review.
+- **6.5%** (566) split into 3+ parts on the naive punctuation→uppercase
+  rule alone — multiple examples spliced into one cell, with a stray `N.`
+  numbering artifact sitting *between* two sentences (not at a cell's
+  start, so a simple leading-strip does not fix it). The correct fix
+  removes `N. ` wherever it sits between a sentence-ending punctuation mark
+  and the next capital letter — e.g. `later?3. Das machen` → `later?Das
+  machen`, which then splits cleanly. This is a genuine fix, not an
+  estimate: verified by actually running the corrected splitter over every
+  example cell in the CSV, not just sampling. A first version that only
+  stripped a *leading* `N. ` looked plausible but left all 566 of these
+  cells unresolved when checked against the full data — the fix must
+  target the artifact's real position.
+- After that fix, **7 cells remain genuinely unsplittable** — nested/curly
+  quotes containing their own sentence-ending punctuation (e.g. `Er sagte:
+  "die" ist der Artikel im Plural.'die' is the article...`), one cell with
+  two numbered artifacts plus a parenthetical remark, and one pure-junk
+  cell reading `Examples5.` These are logged for visibility, not silently
+  dropped, but critically: **every one of the 2,192 rows still has at least
+  one other usable example cell** — verified directly, not assumed — so
+  these 7 cells never block a row from getting a card. `needs_review.json`
+  is informational (which raw cells were discarded) rather than a gate.
 
 ### Character-level contamination
 
@@ -182,20 +214,27 @@ Three passes. Passes 1–2 are deterministic scripts; Pass 3 is interactive.
    exactly the 106 rows with neither). No row falls through all three.
 5. **Translation**: take the **first sense only** (split on runs of 2+
    spaces). This is the primary overflow control — see budget below.
-6. **Examples**: split on the punctuation→uppercase boundary; strip `N.`
-   numbering artifacts; from the resulting DE/EN pairs, pick one **by the
-   word's own level** — the deck's own example sentences already scale in
-   complexity by level, so picking within that band per level is more
-   correct than a single global rule:
+6. **Examples**: remove `N. ` numbering artifacts wherever they sit between
+   a sentence-ending punctuation mark and the next capital letter (not
+   just at a cell's start — verified this is where they actually occur);
+   *then* split on the punctuation→uppercase boundary. From the resulting
+   DE/EN pairs, pick one **by the word's own level** — the deck's own
+   example sentences already scale in complexity by level, so picking
+   within that band per level is more correct than a single global rule:
    - **A1 → shortest** available pair (median 21 chars, p90 29, max 44)
    - **A2 → median-length** available pair (median 34, p90 43, max 96)
    - **B1 → longest** available pair (median 44, p90 55, max 82)
 
-   Route the 3 ambiguous cells and the `Examples5.` junk cell to
-   `needs_review.json`.
+   Log the 7 genuinely unsplittable cells to `needs_review.json` for
+   visibility; every row still has another usable cell, so this never
+   blocks a row (verified against all 2,192 rows, not assumed).
 7. **Grammar block**: split `Detail` on the 🔢/🔄/📊 marker, parse the block
    into structured lines, tag its type, and **strip the emoji from the
-   stored text**. Exactly one block per row where present.
+   stored text**. A marker being present does not guarantee a usable block
+   — 79 comparison-marked rows have only `Positive:` (no inflection to
+   show) and 1 verb-marked row (`möchten`) has no `Partizip II:`; both
+   must resolve to `grammar: null`, not an error. Verified: 210 of 2,192
+   rows end up with `grammar: null` (130 no-marker + 79 + 1).
 8. Emit `parsed.json` + `needs_review.json`.
 
 ### Pass 2 — Mechanical related-word candidates (deterministic)
@@ -277,8 +316,8 @@ One flat array of entries:
 ```
 
 `article` and `grammar` are `null` where not applicable (`grammar` null for
-130 rows). `id` is the lowercased lemma, unique because the deck has no
-duplicate words.
+210 rows — see the grammar-sections breakdown above). `id` is the lowercased
+lemma, unique because the deck has no duplicate words.
 
 ## Backend API contract
 
@@ -347,7 +386,7 @@ primary defences:
 | Filtered set empty (everything excluded) | Worker returns a friendly fallback card ("no words match your filters"), not an error — the display must never show a broken plugin |
 | `vocab.json` fails to load | Worker returns HTTP 5xx; TRMNL falls back to its own stale/error state; failure logged |
 | Malformed / unknown query params | Ignored, defaults applied |
-| Missing `grammar` (130 rows) or empty `related` | Template omits the section entirely; no empty headings |
+| Missing `grammar` (210 rows) or empty `related` | Template omits the section entirely; no empty headings |
 | Pass 1 article assertion fails | Hard error — indicates the source sheet's structure changed |
 | Pass 3 completeness gate fails | Build fails; v1 requires full related-word coverage |
 
@@ -356,11 +395,18 @@ primary defences:
 - **Backend**: unit tests for level filtering, exclusion matching
   (case/whitespace), random selection (seeded for determinism), and the
   empty-result fallback.
-- **Pipeline**: unit tests on real problem rows captured from this analysis —
-  a 3+-split example cell, a `N.` numbering artifact, each of the three
-  grammar markers, a noun with an article, one of the 106 trailing-column
-  POS-fallback rows, the Cyrillic-homoglyph row, and one row per level
-  (A1/A2/B1) to confirm shortest/median/longest example selection.
+- **Pipeline**: unit tests on real problem rows captured from this analysis
+  — a mid-sentence `N.` numbering artifact that must resolve to a clean
+  split (not just get flagged), a genuinely unsplittable quoted-speech
+  cell, each of the three grammar markers *and* their no-block edge cases
+  (comparison-without-inflection, verb-without-partizip), a noun with an
+  article, one of the 106 trailing-column POS-fallback rows, the
+  Cyrillic-homoglyph row, and one row per level (A1/A2/B1) to confirm
+  shortest/median/longest example selection. Critically: run these parsers
+  against the **full 2,192-row CSV**, not just curated samples, before
+  trusting them — every parsing bug found during this spec's analysis
+  (the comparison/verb no-block cases, the mid-sentence numbering
+  artifact) was caught this way, not by sampling.
 - **Template**: use the **`trmnlp` local CLI** with `settings.yml` and
   `.liquid` files to preview locally — no physical device needed for layout
   iteration. Then confirm in TRMNL's hosted previewer.
