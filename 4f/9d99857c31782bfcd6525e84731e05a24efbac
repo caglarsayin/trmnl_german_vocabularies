@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-08-05-trmnl-german-vocab-plugin-design.md
+  s_0cb6b87c93d5f3::t_cb3228ce9c5568 1-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4f9d99857c31782bfcd6525e84731e05a24efbac",
+  "prompts": {},
+  "sessions": {
+    "s_0cb6b87c93d5f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f64f8e8-c887-4c4a-8e6c-fba7dd3e5688",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
