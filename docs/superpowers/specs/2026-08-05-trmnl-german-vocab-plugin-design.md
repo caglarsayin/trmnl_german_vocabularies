@@ -65,10 +65,19 @@ Everything below refers to the 2,192 kept rows unless noted.
   by runs of 2+ spaces, each optionally tagged `(Noun):` / `(Verb):` /
   `(Adjektiv):` / `(Adverb):` etc. **54.8% of rows have no such tag**, so
   tags alone are an insufficient POS source.
-- **The trailing unnamed column is populated for every row** with values like
-  `German Noun (A2)` / `German Word (B1)`. Its noun count (1,159) agrees
-  with the article-derived count (1,161) to within 2 rows, making it a
-  reliable POS fallback for the 54.8% lacking inline tags.
+- **The trailing unnamed column carries a full POS tag**, not just
+  Noun-vs-Word: `Noun` (1,159, agreeing with the article-derived count of
+  1,161 to within 2), `Word` (926 — a placeholder meaning "see the inline
+  `(POS):` tags instead," used exactly on rows that have them), and,
+  critically, specific tags — `Adverb` (76), `Pronoun` (9), `Conjunction`
+  (6), `Preposition` (5), `Adjective` (4), `Interjection` (2), `Verb` (2),
+  `Contraction` (1), `Particle` (1), `Numeral` (1) — for **exactly the 106
+  rows that have neither an article nor an inline tag**. Verified by
+  isolating that no-article/no-tag set and confirming its trailing values
+  are exactly this specific-tag set (not `Noun`/`Word`). **Net result: POS
+  is resolvable for all 2,192 rows with zero manual disambiguation** —
+  article when present, else inline tag when present, else this trailing
+  tag.
 - **`Detail` is not a near-duplicate of `Übersetzung`** — only 5.9% match
   after normalization. It contains the sense blob **plus an emoji-delimited
   grammar section**.
@@ -166,8 +175,9 @@ Three passes. Passes 1–2 are deterministic scripts; Pass 3 is interactive.
 3. **Article + lemma**: regex `^(der|die|das)\s+` on `Wort`; assert the
    remainder equals `Klarwort` (held 100% on the full sheet — treat any
    violation as a hard error, not a warning).
-4. **POS**: inline `(POS):` tag where present (45.2%); otherwise derive from
-   the trailing column (`Noun` vs `Word`) plus article presence.
+4. **POS**: article presence → `Noun`; else inline `(POS):` tag on the first
+   sense where present; else the trailing column's specific tag (covers
+   exactly the 106 rows with neither). No row falls through all three.
 5. **Translation**: take the **first sense only** (split on runs of 2+
    spaces). This is the primary overflow control — see budget below.
 6. **Examples**: split on the punctuation→uppercase boundary; strip `N.`
