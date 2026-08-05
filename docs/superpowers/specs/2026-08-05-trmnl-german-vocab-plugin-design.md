@@ -196,18 +196,33 @@ The method produces true positives (`übersetzen→übersetzung`,
 
 Emit `candidates.json`.
 
-### Pass 3 — Claude Code batch enrichment (interactive, no API token)
+### Pass 3 — Claude Code batch enrichment (no API token; tiered subagent fleet)
 
-Run in batches inside a Claude Code session:
+No standalone script — orchestrated as a Workflow (subagent fleet) from
+inside a Claude Code session, tiered by task difficulty rather than one
+model for everything:
 
-1. **Validate** the 1,296 candidate pairs; reject false positives.
-2. **Generate** links for the 1,507 words with no candidate — opposites,
-   verb↔noun pairs, root forms, near-synonyms — **preferring words that
-   exist in this deck**, since the goal is learning them together.
+1. **Validate** the 1,296 candidate pairs — a bounded yes/no + relation-type
+   judgment per pair, cheap enough for a smaller model. **Haiku**, batched
+   ~100 pairs/agent → **~13 agent calls**.
+2. **Generate** links for the 1,507 words with no mechanical candidate —
+   opposites, verb↔noun pairs, root forms, near-synonyms, **preferring
+   words that exist in this deck**. This is real linguistic judgment where
+   a weaker model's mistakes are more likely and costlier to catch later.
+   **Sonnet**, batched ~40 words/agent (each agent gets the full lemma list
+   for grounding) → **~38 agent calls**.
 3. Label every link with a relation type: `same_root`, `opposite`,
-   `verb_form`, `noun_form`, `synonym`.
-4. Resolve `needs_review.json`.
+   `verb_form`, `noun_form`, `synonym`. Tag `related[].source` as
+   `"mechanical_validated"` (step 1) or `"generated"` (step 2) — cheap
+   provenance for auditing either tier later without re-running anything.
+4. Resolve `needs_review.json` (Sonnet — same reasoning as step 2).
 5. Validate translations opportunistically while passing over each batch.
+
+Both stages use `schema` on the agent calls so output is structured, not
+prose to parse. **~51 agent calls total** — above this session's default
+"medium" workflow guideline (under 15 agents); appropriate here since it's
+a one-time bulk data job with a natural per-batch structure, not a case of
+open-ended fan-out. Confirm before running.
 
 Because complete coverage is a v1 requirement, Pass 3 ends with a
 **completeness gate**, not a spot check: every row must have either a
@@ -237,7 +252,7 @@ One flat array of entries:
     "lines": ["Singular: das Mitglied", "Plural: die Mitglieder"]
   },
   "related": [
-    { "word": "die Mitgliedschaft", "relation": "same_root" }
+    { "word": "die Mitgliedschaft", "relation": "same_root", "source": "mechanical_validated" }
   ]
 }
 ```
