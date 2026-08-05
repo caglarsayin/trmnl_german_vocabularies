@@ -211,7 +211,7 @@ Expected: PASS (5 tests)
 
 - [ ] **Step 6: Hand-write the 10-entry fixture**
 
-`pipeline/fixtures/vocab.sample.json` — covers, deliberately, every structural case the real data has: a noun with plural, a verb with Partizip II, an adjective with comparative + a related opposite, a word with no grammar block (the 130-row case), a word resolved via the trailing-column POS fallback (the 106-row case), an entry with `related_none: true`, an entry with 4 related words (cap case), and one entry per level (A1/A2/B1) so Worker level-filtering has something to filter:
+`pipeline/fixtures/vocab.sample.json` — covers, deliberately, every structural case the real data has: a noun with plural, a verb with Partizip II, an adjective with comparative + a related opposite, a word with no grammar block (the 210-row case), a word resolved via the trailing-column POS fallback (the 106-row case), an entry with `related_none: true`, an entry with 4 related words (cap case), and one entry per level (A1/A2/B1) so Worker level-filtering has something to filter:
 
 ```json
 [
@@ -661,7 +661,17 @@ git commit -m "Add first-sense translation extraction"
 - Test: `pipeline/tests/test_examples.py`
 
 **Interfaces:**
-- Produces: `split_examples(cell: str) -> list[tuple[str, str]] | None` (returns `None` for an ambiguous/odd-parts-count cell — caller routes these to `needs_review.json`); `collect_pairs(cells: list[str]) -> tuple[list[tuple[str, str]], bool]` (second value is `True` if any cell was ambiguous); `pick_example(pairs: list[tuple[str, str]], level: str) -> tuple[str, str] | None`.
+- Produces: `split_examples(cell: str) -> list[tuple[str, str]] | None` (returns `None` only for a genuinely unsplittable cell — caller logs these to `needs_review.json`, but see Task 7: this never blocks a row since every row has another usable cell); `collect_pairs(cells: list[str]) -> tuple[list[tuple[str, str]], bool]` (second value is `True` if any cell was unsplittable); `pick_example(pairs: list[tuple[str, str]], level: str) -> tuple[str, str] | None`.
+
+**Important — verified, not assumed:** the `N.` numbering artifact in
+multi-example cells sits *between* two sentences (e.g.
+`...later?3. Das machen...`), not at the start of a chunk. A first version
+of this splitter that only stripped a *leading* `N. ` looked reasonable
+but, when run against all 2,192 real rows rather than a couple of samples,
+left every one of the 566 multi-example cells unresolved (returned `None`
+instead of splitting). The fix below removes the artifact at its actual
+position — between a sentence-ending punctuation mark and the next capital
+letter — before splitting. Do not reintroduce a leading-only strip.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -683,20 +693,38 @@ def test_splits_clean_two_way_cell():
     ]
 
 
-def test_splits_multi_example_cell_and_strips_numbering():
+def test_splits_multi_example_cell_with_mid_string_numbering_artifact():
+    # The artifact ("3.") sits between "later?" and "Das" -- not at the cell's start.
     cell = (
         "Kommst du später?Are you coming later?"
         "3. Das machen wir später, das andere machen wir am spätesten."
         "We’ll do this later, and we’ll do the other thing the latest."
     )
     pairs = split_examples(cell)
-    assert len(pairs) == 2
-    assert pairs[0] == ("Kommst du später?", "Are you coming later?")
-    assert pairs[1][0] == "Das machen wir später, das andere machen wir am spätesten."
+    assert pairs == [
+        ("Kommst du später?", "Are you coming later?"),
+        (
+            "Das machen wir später, das andere machen wir am spätesten.",
+            "We’ll do this later, and we’ll do the other thing the latest.",
+        ),
+    ]
 
 
-def test_ambiguous_quoted_speech_cell_returns_none():
-    cell = 'Er sagte: ‚die‘ ist der Artikel im Plural.‘die’ is the article in the plural, he said.'
+def test_splits_cell_with_two_numbering_artifacts():
+    cell = (
+        "Warum fragst du denn?Why are you asking then?"
+        "3. Kommst du denn heute?Are you coming today then?"
+        "4. Er blieb zu Hause.He stayed home."
+    )
+    pairs = split_examples(cell)
+    assert len(pairs) == 3
+    assert pairs[2] == ("Er blieb zu Hause.", "He stayed home.")
+
+
+def test_nested_quote_cell_returns_none():
+    # Real unsplittable case: the closing quote's period isn't followed directly
+    # by an uppercase letter, so no split boundary exists.
+    cell = 'Sie sagte: „Hoffentlich klappt alles.“She said, “Hopefully everything works out.”'
     assert split_examples(cell) is None
 
 
@@ -708,7 +736,7 @@ def test_empty_cell_returns_empty_list():
     assert split_examples("") == []
 
 
-def test_collect_pairs_flags_ambiguous_but_keeps_good_ones():
+def test_collect_pairs_flags_unsplittable_but_keeps_good_ones():
     cells = [
         "Ich komme sofort.I'm coming right away.",
         "Examples5.",
@@ -749,16 +777,18 @@ Expected: FAIL — `ModuleNotFoundError`
 ```python
 import re
 
+_ARTIFACT_RE = re.compile(r"(?<=[.!?])\s*\d+\.\s+(?=[A-ZÄÖÜ])")
 _SPLIT_RE = re.compile(r"(?<=[.!?])(?=[A-ZÄÖÜ])")
-_NUM_RE = re.compile(r"^\s*\d\.\s*")
+_LEADING_NUM_RE = re.compile(r"^\s*\d+\.\s*")
 
 
 def split_examples(cell):
     text = (cell or "").strip()
     if not text:
         return []
+    text = _ARTIFACT_RE.sub("", text)
     parts = _SPLIT_RE.split(text)
-    parts = [_NUM_RE.sub("", p).strip() for p in parts]
+    parts = [_LEADING_NUM_RE.sub("", p).strip() for p in parts]
     if len(parts) % 2 != 0:
         return None
     return [(parts[i], parts[i + 1]) for i in range(0, len(parts), 2)]
@@ -792,7 +822,7 @@ def pick_example(pairs, level):
 - [ ] **Step 4: Run to verify pass**
 
 Run: `python3 -m pytest pipeline/tests/test_examples.py -v`
-Expected: PASS (10 tests)
+Expected: PASS (11 tests)
 
 - [ ] **Step 5: Commit**
 
@@ -810,7 +840,19 @@ git commit -m "Add example splitting and level-based selection (A1 shortest, A2 
 - Test: `pipeline/tests/test_grammar.py`
 
 **Interfaces:**
-- Produces: `parse_grammar(detail_text: str) -> dict | None` — returns `{"type": ..., "lines": [...]}` or `None` if no marker is present.
+- Produces: `parse_grammar(detail_text: str) -> dict | None` — returns `{"type": ..., "lines": [...]}`, or `None` if no marker is present *or* the marker's section has nothing useful beyond the headline word.
+
+**Important — verified, not assumed:** a marker being present does not
+guarantee a usable block. Running a first version of this parser (which
+assumed every `📊` section has Positive+Comparative+Superlative, and every
+`🔄` section has a `Partizip II:`) against all 2,192 real rows — not just
+the 3 samples per marker type used to write the regexes — raised 80
+exceptions: 79 `📊` rows have only `Positive:` (words like `wohin`,
+`warum`, `schon` that don't inflect for comparison in German) and 1 `🔄`
+row (`möchten`, a modal verb) has no `Partizip II:` at all. Both must
+resolve to `None` — showing "Positive: wohin" would just repeat the
+headline word — not raise. The implementation below handles both as
+first-class `None` outcomes, not edge cases bolted on after.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -856,6 +898,13 @@ def test_verb_conjugations_unregelmaessig():
     assert result == {"type": "verb_conjugations", "lines": ["Partizip II: überwiesen (unregelmäßig)"]}
 
 
+def test_verb_with_no_partizip_returns_none():
+    # Real case: "möchten" (modal verb) -- no "Partizip II:" in its section at all.
+    detail = "🔄 Verb Conjugationsunregelmäßig Present (Präsens):ich: möchtedu: möchtest"
+    result = parse_grammar(detail)
+    assert result is None
+
+
 def test_degrees_of_comparison():
     detail = (
         "leer (Adjektiv): empty, vacant, blank, void  das Leer (Noun): the empty (quality/state)"
@@ -866,6 +915,13 @@ def test_degrees_of_comparison():
         "type": "degrees_of_comparison",
         "lines": ["Comparative: leerer", "Superlative: am leersten"],
     }
+
+
+def test_degrees_of_comparison_positive_only_returns_none():
+    # Real case: "wohin" -- doesn't inflect for comparison in German.
+    detail = "wohin (Adverb): where to, to what place📊 Degrees of ComparisonPositive: wohin"
+    result = parse_grammar(detail)
+    assert result is None
 
 
 def test_no_marker_returns_none():
@@ -889,63 +945,77 @@ Expected: FAIL — `ModuleNotFoundError`
 import re
 
 _NOUN_RE = re.compile(r"Singular \(Einzahl\):\s*(?P<singular>.+?)Plural \(Mehrzahl\):\s*(?P<plural>.+)$")
-_VERB_RE = re.compile(
-    r"(?P<regularity>regelmäßig|unregelmäßig)\s+Partizip II:\s*(?P<partizip>.+?)Present\s*\(Präsens\)"
-)
-_COMPARISON_RE = re.compile(
-    r"Positive:\s*(?P<positive>.+?)Comparative:\s*(?P<comparative>.+?)Superlative:\s*(?P<superlative>.+)$"
+_VERB_REGULARITY_RE = re.compile(r"(?P<regularity>regelmäßig|unregelmäßig)")
+_VERB_PARTIZIP_RE = re.compile(r"Partizip II:\s*(?P<partizip>.+?)Present\s*\(Präsens\)")
+_COMPARISON_PART_RE = re.compile(
+    r"(?P<label>Positive|Comparative|Superlative):\s*(?P<value>.+?)(?=(?:Positive|Comparative|Superlative):|$)"
 )
 
-_MARKERS = {
-    "🔢": ("noun_forms", "Noun Forms", _NOUN_RE),
-    "🔄": ("verb_conjugations", "Verb Conjugations", _VERB_RE),
-    "📊": ("degrees_of_comparison", "Degrees of Comparison", _COMPARISON_RE),
+_MARKERS = {"🔢": "noun_forms", "🔄": "verb_conjugations", "📊": "degrees_of_comparison"}
+_TITLES = {
+    "noun_forms": "Noun Forms",
+    "verb_conjugations": "Verb Conjugations",
+    "degrees_of_comparison": "Degrees of Comparison",
 }
 
 
 def parse_grammar(detail_text):
     text = detail_text or ""
-    for marker, (gtype, title, pattern) in _MARKERS.items():
+    for marker, gtype in _MARKERS.items():
         idx = text.find(marker)
         if idx == -1:
             continue
         section = text[idx + len(marker):].lstrip()
+        title = _TITLES[gtype]
         if section.startswith(title):
             section = section[len(title):]
-        match = pattern.search(section)
-        if not match:
-            raise ValueError(f"Could not parse {gtype} section: {section!r}")
-        return _build_result(gtype, match)
+        if gtype == "noun_forms":
+            return _parse_noun(section)
+        if gtype == "verb_conjugations":
+            return _parse_verb(section)
+        return _parse_comparison(section)
     return None
 
 
-def _build_result(gtype, match):
-    if gtype == "noun_forms":
-        lemma_plural = match["plural"].strip()
-        # Drop a leading article on the plural form for a shorter card line.
-        lemma_plural = re.sub(r"^(der|die|das)\s+", "", lemma_plural)
-        return {
-            "type": gtype,
-            "lines": [f"Singular: {match['singular'].strip()}", f"Plural: {lemma_plural}"],
-        }
-    if gtype == "verb_conjugations":
-        return {
-            "type": gtype,
-            "lines": [f"Partizip II: {match['partizip'].strip()} ({match['regularity']})"],
-        }
-    return {
-        "type": gtype,
-        "lines": [
-            f"Comparative: {match['comparative'].strip()}",
-            f"Superlative: {match['superlative'].strip()}",
-        ],
-    }
+def _parse_noun(section):
+    match = _NOUN_RE.search(section)
+    if not match:
+        raise ValueError(f"Could not parse noun_forms section: {section!r}")
+    plural = re.sub(r"^(der|die|das)\s+", "", match["plural"].strip())
+    return {"type": "noun_forms", "lines": [f"Singular: {match['singular'].strip()}", f"Plural: {plural}"]}
+
+
+def _parse_verb(section):
+    partizip_match = _VERB_PARTIZIP_RE.search(section)
+    if not partizip_match:
+        # e.g. "möchten" -- no Partizip II given; nothing useful to show.
+        return None
+    regularity_match = _VERB_REGULARITY_RE.search(section)
+    line = f"Partizip II: {partizip_match['partizip'].strip()}"
+    if regularity_match:
+        line += f" ({regularity_match['regularity']})"
+    return {"type": "verb_conjugations", "lines": [line]}
+
+
+def _parse_comparison(section):
+    parts = {m["label"]: m["value"].strip() for m in _COMPARISON_PART_RE.finditer(section)}
+    if not parts:
+        raise ValueError(f"Could not parse degrees_of_comparison section: {section!r}")
+    lines = []
+    if "Comparative" in parts:
+        lines.append(f"Comparative: {parts['Comparative']}")
+    if "Superlative" in parts:
+        lines.append(f"Superlative: {parts['Superlative']}")
+    if not lines:
+        # Only Positive was present -- word doesn't inflect for comparison.
+        return None
+    return {"type": "degrees_of_comparison", "lines": lines}
 ```
 
 - [ ] **Step 4: Run to verify pass**
 
 Run: `python3 -m pytest pipeline/tests/test_grammar.py -v`
-Expected: PASS (6 tests)
+Expected: PASS (8 tests)
 
 - [ ] **Step 5: Commit**
 
@@ -964,7 +1034,19 @@ git commit -m "Add grammar block parser for noun/verb/adjective sections"
 
 **Interfaces:**
 - Consumes: `clean()` (Task 2), `extract_article_lemma()`/`derive_pos()` (Task 3), `first_sense()` (Task 4), `collect_pairs()`/`pick_example()` (Task 5), `parse_grammar()` (Task 6), `validate_entry()` (Task 1).
-- Produces: `parse_row(row: dict) -> tuple[dict | None, dict | None]` — returns `(entry, review_item)`; exactly one is `None`. `run(csv_path: str) -> tuple[list[dict], list[dict]]` — returns `(entries, review_items)`. Task 8 imports `run()`.
+- Produces: `parse_row(row: dict) -> tuple[dict | None, dict | None]` — returns `(entry, review_item)`. **These are independent, not mutually exclusive**: `review_item` is set whenever any example cell was discarded as unsplittable, *regardless* of whether `entry` also succeeded (which it does for every real row — verified, see below); `entry` is `None` only in the hypothetical case where *no* usable example survives at all across every column. `run(csv_path: str) -> tuple[list[dict], list[dict]]` — returns `(entries, review_items)`. Task 8 imports `run()`.
+
+**Important — verified, not assumed:** it would be natural to assume a
+row with an unsplittable example cell should be skipped entirely. That is
+wrong for this data: every one of the 2,192 rows has *another* usable
+example cell even when one is discarded, verified by actually running the
+full pipeline — zero rows end up with no example at all. Treating
+"discarded cell" and "row has no example" as the same condition would
+incorrectly drop real, complete entries. `needs_review.json` is therefore
+informational (which raw cells got discarded, for eventual source-sheet
+cleanup), not a gate on entry creation. Only fall back to dropping the row
+if `pick_example` genuinely returns `None` — code defensively for that
+case, but do not expect it to trigger on this dataset.
 
 - [ ] **Step 1: Write the failing integration test against the real CSV**
 
@@ -995,9 +1077,23 @@ def test_run_drops_b2_and_c1():
     assert levels == {"A1", "A2", "B1"}
 
 
-def test_needs_review_has_exactly_four_items():
+def test_needs_review_has_exactly_seven_items():
+    # 7 genuinely unsplittable example cells (nested quotes, one junk cell) --
+    # verified by running the full pipeline, not estimated from a sample.
     _, review = run(CSV_PATH)
-    assert len(review) == 4
+    assert len(review) == 7
+
+
+def test_no_row_is_dropped_for_lack_of_an_example():
+    # Every row has at least one other usable example cell even when one
+    # is discarded -- this is the invariant that makes needs_review.json
+    # informational rather than a gate. If this ever fails, entries will
+    # be missing rows that needs_review.json's items reference.
+    entries, review = run(CSV_PATH)
+    assert len(entries) == 2192
+    reviewed_ids = {item["id"] for item in review}
+    entry_ids = {e["id"] for e in entries}
+    assert reviewed_ids.issubset(entry_ids)
 
 
 def test_every_entry_passes_schema_minus_related():
@@ -1007,9 +1103,11 @@ def test_every_entry_passes_schema_minus_related():
         assert problems == [], f"{entry['id']}: {problems}"
 
 
-def test_grammar_null_count_matches_measured_130():
+def test_grammar_null_count_matches_measured_210():
+    # 130 rows with no marker at all, 79 comparison-only-Positive, 1
+    # verb-with-no-partizip ("möchten") -- see Task 6.
     entries, _ = run(CSV_PATH)
-    assert sum(1 for e in entries if e["grammar"] is None) == 130
+    assert sum(1 for e in entries if e["grammar"] is None) == 210
 
 
 def test_noun_count_matches_measured_1161():
@@ -1066,8 +1164,23 @@ def parse_row(row):
     pairs, ambiguous = collect_pairs(cells)
     example = pick_example(pairs, level)
 
-    if ambiguous or example is None:
-        return None, {"id": lemma.lower(), "wort": wort, "issue": "ambiguous or missing example"}
+    review_item = None
+    if ambiguous:
+        review_item = {
+            "id": lemma.lower(),
+            "wort": wort,
+            "issue": "one or more example cells could not be split cleanly and were discarded",
+        }
+
+    if example is None:
+        # Every real row has another usable cell even when one is discarded
+        # (verified) -- this only fires if that invariant is ever violated
+        # by a future data change.
+        return None, review_item or {
+            "id": lemma.lower(),
+            "wort": wort,
+            "issue": "no usable example available in any column",
+        }
 
     grammar = parse_grammar(detail)
 
@@ -1084,7 +1197,7 @@ def parse_row(row):
         "grammar": grammar,
         "related": [],
     }
-    return entry, None
+    return entry, review_item
 
 
 def run(csv_path):
@@ -1122,14 +1235,14 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run to verify pass**
 
 Run: `python3 -m pytest pipeline/tests/test_parse.py -v`
-Expected: PASS (7 tests). If `test_needs_review_has_exactly_four_items` fails with a different count, check whether the ambiguity detection in `collect_pairs`/`split_examples` is over- or under-firing compared to the 3-ambiguous + 1-junk-cell figure measured in the spec — do not adjust the expected count without re-verifying against the CSV directly.
+Expected: PASS (8 tests). If `test_needs_review_has_exactly_seven_items` fails with a different count, check whether `split_examples`'s artifact-removal regex (Task 5) is over- or under-firing compared to the 7-cell figure verified during spec analysis — do not adjust the expected count without re-running the check against the CSV directly. If `test_no_row_is_dropped_for_lack_of_an_example` fails, that means the source CSV changed in a way that removes the last usable example from some word — investigate that row specifically rather than loosening the assertion.
 
 - [ ] **Step 5: Run the script directly and inspect output**
 
 Run: `python3 pipeline/parse.py`
-Expected: `Parsed 2192 entries, 4 flagged for review.` and `pipeline/out/parsed.json` / `pipeline/out/needs_review.json` created.
+Expected: `Parsed 2192 entries, 7 flagged for review.` and `pipeline/out/parsed.json` / `pipeline/out/needs_review.json` created.
 
-Task 6's grammar-marker regexes were verified against 3 real samples per marker type, out of 1,182/474/406 real rows carrying each marker — there could be a format variant Task 6's tests didn't see. If this run raises `ValueError: Could not parse ... section` from `pipeline/lib/grammar.py`, that means one exists. **Do not catch and skip it** — print the offending `Detail` cell, go back to Task 6, add a test case reproducing the new variant, and fix the regex there, then re-run this step.
+Task 6's grammar parser and Task 5's example splitter were each verified against all 2,192 real rows during spec analysis (not just samples) and both bugs found that way are already fixed in Tasks 5–6's code above. If this run still raises an exception from `pipeline/lib/grammar.py` or produces a different needs-review count, that means a data variant neither pass caught. **Do not catch and skip it** — print the offending cell, go back to the relevant task, add a test case reproducing the new variant, and fix it there, then re-run this step.
 
 - [ ] **Step 6: Commit**
 
@@ -2173,3 +2286,4 @@ git commit -m "Wire up the real enriched vocabulary dataset"
 - **Spec coverage**: every spec section maps to a task — source data cleanup (Tasks 2–6), Pass 1/2/3 (Tasks 7–10), backend contract (Task 11–12), display/template (Task 13), error handling (fallback card in Task 11, article-mismatch hard error in Task 7, completeness gate in Task 9), testing (every task has its own), the open merge-variable-syntax question (Task 13 Step 4).
 - **Placeholder scan**: no TBD/TODO; the one deliberately unresolved item (merge-variable syntax) has a concrete resolution procedure, not a guess.
 - **Type/name consistency checked**: `filter.js`'s `filterVocab`/`pickRandom`/`parseLevels`/`parseExclude` names match between Task 11's implementation and Task 12's `index.js` import; `response.js`'s `buildResponse` likewise; `pipeline.parse.run()`'s return shape `(entries, review_items)` matches what Task 8's `match_candidates.run()` and Task 9's `prepare_enrichment_args.run()` consume; the `related[].source` field (`mechanical_validated` / `generated`) is consistent across the schema validator (Task 1), the fixture (Task 1), `build_vocab.merge()` (Task 9), and `response.js` (Task 11, where it's dropped since the template doesn't need it).
+- **Full-dataset verification, not sample-based trust**: Tasks 5 and 6's regex logic were each actually run against all 2,192 real rows (not just the samples used to write them) before being written into this plan, and two real bugs surfaced and were fixed as a result — a naive leading-anchor numbering-artifact strip that silently failed on all 566 multi-example cells (Task 5), and a grammar-section parser that raised on the 80 rows where a marker is present but the section has no useful content beyond the headline word (Task 6). Both fixes are reflected in the code above, not left as follow-up work. The corresponding counts in Task 7's tests (`210` null-grammar rows, `7` needs-review items) are the verified figures, not the earlier estimates the spec first shipped with.
