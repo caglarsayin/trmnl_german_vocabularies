@@ -1629,7 +1629,7 @@ git commit -m "Add Pass 3 tooling: enrichment args prep, merge, and completeness
 
 ### Task 10: Pass 3 execution — run the tiered subagent Workflow (real cost, requires confirmation)
 
-**This task spends real tokens across ~51 subagent calls.** Do not run it as a routine step in a subagent-driven-development loop without a human confirming first — stop and ask before invoking the Workflow tool below.
+**This task spends real tokens across ~51 subagent calls** (13 Haiku validation batches + 38 Sonnet generation batches). Do not run it as a routine step in a subagent-driven-development loop without a human confirming first — stop and ask before invoking the Workflow tool below.
 
 **Files:**
 - Modifies: `pipeline/out/enrichment_args.json` (generated), `pipeline/out/enrichment_result.json` (generated), `pipeline/out/vocab.json` (generated), `worker/src/vocab.json` (overwritten with real data — see Task 11, which this task depends on for that final destination existing).
@@ -1637,14 +1637,16 @@ git commit -m "Add Pass 3 tooling: enrichment args prep, merge, and completeness
 **Interfaces:**
 - Consumes: `prepare_enrichment_args.run()` and `build_vocab.run()` from Task 9.
 
+**Scope note:** the needs-review items (7 cells, discarded during Pass 1) are informational only — `build_vocab.merge()` (Task 9) never consumes a resolution for them, and every one of those 7 rows already has a working example from another cell (verified: 0 rows blocked). An earlier draft of this task included a "Review" phase asking an LLM to resolve those cells, but since nothing downstream would ever read that output, it was pure wasted cost — removed. `needs_review.json` remains on disk as a diagnostic log for optional manual source-sheet cleanup, not something this pass acts on.
+
 - [ ] **Step 1: Generate the enrichment args file**
 
 Run: `python3 pipeline/prepare_enrichment_args.py`
-Expected: prints pair/word/review counts (1,296 / 1,507 / 4 if Tasks 7–8 ran against the unmodified CSV) and writes `pipeline/out/enrichment_args.json`.
+Expected: prints pair/word/review counts (1,296 / 1,507 / 7 if Tasks 7–8 ran against the unmodified CSV) and writes `pipeline/out/enrichment_args.json`.
 
 - [ ] **Step 2: STOP — confirm with the user before proceeding**
 
-State plainly: "This will spawn approximately 51 subagents (13 Haiku validation batches, 38 Sonnet generation batches, plus 1 needs-review resolution call) and consume real tokens. Proceed?" Do not continue past this step without an explicit go-ahead.
+State plainly: "This will spawn approximately 51 subagents (13 Haiku validation batches, 38 Sonnet generation batches) and consume real tokens. Proceed?" Do not continue past this step without an explicit go-ahead.
 
 - [ ] **Step 3: Read the prepared args**
 
@@ -1659,7 +1661,6 @@ export const meta = {
   phases: [
     { title: 'Validate', detail: 'Haiku judges mechanical stem-match candidate pairs' },
     { title: 'Generate', detail: 'Sonnet generates related words for words with no candidate' },
-    { title: 'Review', detail: 'Sonnet resolves the 4 needs_review items' },
   ],
 }
 
@@ -1719,26 +1720,6 @@ const GENERATE_SCHEMA = {
   required: ['results'],
 }
 
-const REVIEW_SCHEMA = {
-  type: 'object',
-  properties: {
-    results: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          resolution: { type: 'string' },
-          example_de: { type: 'string' },
-          example_en: { type: 'string' },
-        },
-        required: ['id', 'resolution'],
-      },
-    },
-  },
-  required: ['results'],
-}
-
 phase('Validate')
 const pairBatches = chunk(args.pairs, 100)
 const validateResults = await pipeline(
@@ -1772,27 +1753,18 @@ const generateResults = await pipeline(
     )
 )
 
-phase('Review')
-let reviewResult = { results: [] }
-if (args.needsReview.length > 0) {
-  reviewResult = await agent(
-    `These German vocabulary rows had example sentences that couldn't be mechanically split into clean ` +
-      `German/English pairs (ambiguous punctuation or junk data). For each, provide a corrected example_de ` +
-      `and example_en, or set resolution to "drop" if the row's example data is unsalvageable.\n\n` +
-      `Rows:\n${JSON.stringify(args.needsReview)}`,
-    { label: 'resolve-needs-review', phase: 'Review', model: 'sonnet', schema: REVIEW_SCHEMA }
-  )
-}
-
 const validated = validateResults.filter(Boolean).flatMap((r) => r.results)
 const generated = generateResults.filter(Boolean).flatMap((r) => r.results)
 
 return {
   validated,
   generated,
-  needs_review_resolved: reviewResult.results,
 }
 ```
+
+`args.needsReview` is intentionally unused by this script — see the Scope
+note above. `pipeline/out/needs_review.json` stays on disk as a diagnostic
+log; nothing in this pass or `build_vocab.merge()` acts on it.
 
 - [ ] **Step 5: Save the Workflow's result**
 

@@ -273,14 +273,22 @@ model for everything:
    `verb_form`, `noun_form`, `synonym`. Tag `related[].source` as
    `"mechanical_validated"` (step 1) or `"generated"` (step 2) — cheap
    provenance for auditing either tier later without re-running anything.
-4. Resolve `needs_review.json` (Sonnet — same reasoning as step 2).
-5. Validate translations opportunistically while passing over each batch.
+4. Validate translations opportunistically while passing over each batch.
+
+`needs_review.json`'s 7 cells are **not** resolved by this pass — every
+one of those rows already has a working example from another cell
+(verified: 0 rows blocked), so an LLM "fix" for the discarded cell would
+have no consumer. An earlier draft of this pass included exactly that step
+and it was removed once `build_vocab.merge()` (Pass 3 tooling) turned out
+never to read such a resolution — it stays on disk as a diagnostic log for
+optional manual source-sheet cleanup, not something this pass acts on.
 
 Both stages use `schema` on the agent calls so output is structured, not
-prose to parse. **~51 agent calls total** — above this session's default
-"medium" workflow guideline (under 15 agents); appropriate here since it's
-a one-time bulk data job with a natural per-batch structure, not a case of
-open-ended fan-out. Confirm before running.
+prose to parse. **~51 agent calls total** (13 validation + 38 generation)
+— above this session's default "medium" workflow guideline (under 15
+agents); appropriate here since it's a one-time bulk data job with a
+natural per-batch structure, not a case of open-ended fan-out. Confirm
+before running.
 
 Because complete coverage is a v1 requirement, Pass 3 ends with a
 **completeness gate**, not a spot check: every row must have either a
