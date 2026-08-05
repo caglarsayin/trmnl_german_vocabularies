@@ -17,8 +17,10 @@ estimated.
 ## Goals
 
 - One flashcard per refresh, showing: German word (with article for nouns),
-  part of speech, English translation, one example sentence + translation,
-  the applicable grammar block, and related words from the deck.
+  part of speech, English translation, **exactly one** example sentence +
+  translation selected to match the word's own level (simple for A1,
+  longer/more complex for B1), the applicable grammar block, and related
+  words from the deck.
 - Per-installation filtering by CEFR level, without a backend user database.
 - Keep the live request path LLM-free and fast — all language work happens
   once, offline, during data preparation.
@@ -181,9 +183,16 @@ Three passes. Passes 1–2 are deterministic scripts; Pass 3 is interactive.
 5. **Translation**: take the **first sense only** (split on runs of 2+
    spaces). This is the primary overflow control — see budget below.
 6. **Examples**: split on the punctuation→uppercase boundary; strip `N.`
-   numbering artifacts; from the resulting DE/EN pairs pick the **shortest
-   pair** as the card's example; route the 3 ambiguous cells and the
-   `Examples5.` junk cell to `needs_review.json`.
+   numbering artifacts; from the resulting DE/EN pairs, pick one **by the
+   word's own level** — the deck's own example sentences already scale in
+   complexity by level, so picking within that band per level is more
+   correct than a single global rule:
+   - **A1 → shortest** available pair (median 21 chars, p90 29, max 44)
+   - **A2 → median-length** available pair (median 34, p90 43, max 96)
+   - **B1 → longest** available pair (median 44, p90 55, max 82)
+
+   Route the 3 ambiguous cells and the `Examples5.` junk cell to
+   `needs_review.json`.
 7. **Grammar block**: split `Detail` on the 🔢/🔄/📊 marker, parse the block
    into structured lines, tag its type, and **strip the emoji from the
    stored text**. Exactly one block per row where present.
@@ -311,16 +320,21 @@ Card structure, top to bottom:
 | `Wort` | 9 | 13 | 17 | 32 |
 | `Übersetzung`, all senses | 57 | 162 | 214 | **315** |
 | `Übersetzung`, **first sense only** | 46 | 77 | 118 | **163** |
-| example cell, any | 65 | 96 | 158 | 297 |
-| example cell, **shortest per word** | 48 | 68 | 86 | 297 |
+| example DE, **level-selected** (see above) | 33 | 47 | 62 | 96 |
+| example EN, **level-selected** | 32 | 47 | 63 | 84 |
 
-Taking the first sense cuts the worst case from 315 → 163 characters, and
-taking the shortest example gives a p99 of 86. These two choices are the
-primary overflow defence. On top of them:
+(The example figures are measured on the properly split, per-level-selected
+sentence — not the raw unsplit cell, which mixes DE+EN+multiple examples
+and would misleadingly show a max of 297.)
+
+Taking the first sense cuts the worst case from 315 → 163 characters. The
+level-aware example selection keeps examples well-bounded on its own — max
+96 chars — with no observed case needing truncation. On top of these two
+primary defences:
 
 - Hard-cap translation at 120 chars (covers p99 = 118) with ellipsis.
-- Hard-cap the example at 110 chars (covers p99 = 86); one outlier word has
-  no example under 297 chars and will truncate.
+- Hard-cap the example at 100 chars (covers the measured max of 96) as a
+  safety margin, not because truncation is expected.
 - Cap `related` at 4 items.
 - Strip all emoji before rendering.
 - Verify against the framework's overflow-management utilities rather than
@@ -344,8 +358,9 @@ primary overflow defence. On top of them:
   empty-result fallback.
 - **Pipeline**: unit tests on real problem rows captured from this analysis —
   a 3+-split example cell, a `N.` numbering artifact, each of the three
-  grammar markers, a noun with an article, a row with no POS tag, and the
-  Cyrillic-homoglyph row.
+  grammar markers, a noun with an article, one of the 106 trailing-column
+  POS-fallback rows, the Cyrillic-homoglyph row, and one row per level
+  (A1/A2/B1) to confirm shortest/median/longest example selection.
 - **Template**: use the **`trmnlp` local CLI** with `settings.yml` and
   `.liquid` files to preview locally — no physical device needed for layout
   iteration. Then confirm in TRMNL's hosted previewer.
