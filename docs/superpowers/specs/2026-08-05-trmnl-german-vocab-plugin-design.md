@@ -317,7 +317,12 @@ One flat array of entries:
 
 `article` and `grammar` are `null` where not applicable (`grammar` null for
 210 rows — see the grammar-sections breakdown above). `id` is the lowercased
-lemma, unique because the deck has no duplicate words.
+`word` (not `lemma`) with spaces replaced by hyphens — verified unique
+across all 2,192 rows. `lemma.lower()` is **not** safe as the id: German
+capitalizes nominalized verbs, so the noun "das Hören" (hearing) and the
+verb "hören" (to hear) share the lemma "hören" and collide if lowercased
+without the article. `word` already carries that distinction (`das Hören`
+vs `hören`), which is exactly why it, not the bare lemma, is the identity.
 
 ## Backend API contract
 

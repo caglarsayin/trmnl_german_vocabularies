@@ -216,7 +216,7 @@ Expected: PASS (5 tests)
 ```json
 [
   {
-    "id": "mitglied", "level": "A2", "word": "das Mitglied", "lemma": "Mitglied",
+    "id": "das-mitglied", "level": "A2", "word": "das Mitglied", "lemma": "Mitglied",
     "article": "das", "pos": "Noun",
     "translation": "member (of an organization), participant",
     "example_de": "Neue Mitglieder sind willkommen.", "example_en": "New members are welcome.",
@@ -263,7 +263,7 @@ Expected: PASS (5 tests)
     ]
   },
   {
-    "id": "baum", "level": "A1", "word": "der Baum", "lemma": "Baum",
+    "id": "der-baum", "level": "A1", "word": "der Baum", "lemma": "Baum",
     "article": "der", "pos": "Noun",
     "translation": "tree",
     "example_de": "Der Baum ist grün.", "example_en": "The tree is green.",
@@ -279,7 +279,7 @@ Expected: PASS (5 tests)
     "related": [{"word": "langsam", "relation": "opposite", "source": "generated"}]
   },
   {
-    "id": "ubersetzung", "level": "B1", "word": "die Übersetzung", "lemma": "Übersetzung",
+    "id": "die-übersetzung", "level": "B1", "word": "die Übersetzung", "lemma": "Übersetzung",
     "article": "die", "pos": "Noun",
     "translation": "translation, translated version",
     "example_de": "Die Übersetzung dieses Fachbuchs ins Japanische war eine echte Herausforderung für das gesamte Team.",
@@ -297,7 +297,7 @@ Expected: PASS (5 tests)
     "related": [{"word": "unwichtig", "relation": "opposite", "source": "generated"}]
   },
   {
-    "id": "ueberzeugen", "level": "B1", "word": "überzeugen", "lemma": "überzeugen",
+    "id": "überzeugen", "level": "B1", "word": "überzeugen", "lemma": "überzeugen",
     "article": null, "pos": "Verb",
     "translation": "to convince, to persuade",
     "example_de": "Es dauerte lange, aber am Ende konnte sie ihn mit guten Argumenten vollständig überzeugen.",
@@ -1116,9 +1116,20 @@ def test_noun_count_matches_measured_1161():
 
 
 def test_no_duplicate_ids():
+    # Real collision found by running against the full CSV: the noun "das
+    # Hören" (hearing) and the verb "hören" (to hear) share a lemma and
+    # would collide if the id were derived from lemma.lower() instead of
+    # word.lower() (see make_id() in parse.py).
     entries, _ = run(CSV_PATH)
     ids = [e["id"] for e in entries]
     assert len(ids) == len(set(ids))
+
+
+def test_id_distinguishes_noun_and_verb_sharing_a_lemma():
+    entries, _ = run(CSV_PATH)
+    by_id = {e["id"]: e for e in entries}
+    assert by_id["das-hören"]["pos"] == "Noun"
+    assert by_id["hören"]["pos"] == "Verb"
 ```
 
 - [ ] **Step 2: Run to verify failure**
@@ -1148,6 +1159,16 @@ KEPT_LEVELS = {"A1", "A2", "B1"}
 EXAMPLE_COLUMNS = [f"Example{i}" for i in range(1, 6)]
 
 
+def make_id(wort):
+    # NOT lemma.lower(): German capitalizes nominalized verbs, so the noun
+    # "das Hören" (hearing) and the verb "hören" (to hear) share a lemma
+    # ("hören") and would collide if the article were dropped before
+    # lowercasing. `wort` already carries that distinction -- verified
+    # unique across all 2,192 real rows; `lemma.lower()` was not (1 real
+    # collision found by testing against the full CSV).
+    return wort.lower().replace(" ", "-")
+
+
 def parse_row(row):
     level = (row.get("Niveau") or "").strip()
     wort = clean(row.get("Wort"))
@@ -1156,6 +1177,7 @@ def parse_row(row):
     detail = row.get("Detail") or ""  # grammar parser needs the raw emoji markers
     trailing = (row.get("") or "").strip()
 
+    entry_id = make_id(wort)
     article, lemma = extract_article_lemma(wort, klarwort)
     pos = derive_pos(wort, ubersetzung, trailing)
     translation = first_sense(ubersetzung)
@@ -1167,7 +1189,7 @@ def parse_row(row):
     review_item = None
     if ambiguous:
         review_item = {
-            "id": lemma.lower(),
+            "id": entry_id,
             "wort": wort,
             "issue": "one or more example cells could not be split cleanly and were discarded",
         }
@@ -1177,7 +1199,7 @@ def parse_row(row):
         # (verified) -- this only fires if that invariant is ever violated
         # by a future data change.
         return None, review_item or {
-            "id": lemma.lower(),
+            "id": entry_id,
             "wort": wort,
             "issue": "no usable example available in any column",
         }
@@ -1185,7 +1207,7 @@ def parse_row(row):
     grammar = parse_grammar(detail)
 
     entry = {
-        "id": lemma.lower(),
+        "id": entry_id,
         "level": level,
         "word": wort,
         "lemma": lemma,
