@@ -59,11 +59,20 @@ template --> pushes static image to device
 ```
 
 - **TRMNL Private Plugin**, strategy = **Polling**. TRMNL calls our Worker
-  URL on a schedule the user configures in the TRMNL UI.
+  URL on a schedule (`refresh_interval`), which must be one of TRMNL's fixed
+  values: **15, 60, 360, 720, or 1440 minutes** — not an arbitrary number.
 - **Custom Fields** (defined on the plugin) give each installation its own
-  settings form — levels to include, words to exclude. TRMNL stores these
-  per installation and appends them as query parameters on every poll
-  request. No auth or per-user database needed for this on our side.
+  settings form — levels to include (a `select` field with `multiple:
+  true`, constrained to A1/A2/B1) and words to exclude (a `multi_string`
+  field, free-form comma-separated). We author the Polling URL itself as a
+  template referencing each field by keyname (e.g. `.../poll?levels={{
+  levels }}&exclude={{ exclude }}`); TRMNL interpolates the installation's
+  saved values into that URL before calling it. So per-installation
+  settings reach our Worker as query params via our own URL templating —
+  not an automatic passthrough — and still without any auth or per-user
+  database on our side. (Source: [Private Plugins](https://help.trmnl.com/en/articles/9510536-private-plugins),
+  [Custom Plugin Form Builder](https://help.trmnl.com/en/articles/10513740-custom-plugin-form-builder),
+  [Dynamic Polling URLs](https://help.trmnl.com/en/articles/12689499-dynamic-polling-urls).)
 - **Backend runtime: Cloudflare Workers.** Chosen for a generous free tier
   at this traffic volume, Workers KV available if progress-tracking is
   added later, and simple CLI deploy (Wrangler).
@@ -88,8 +97,9 @@ Two passes, run manually whenever the source sheet changes:
    pattern-based cleanup): splits the concatenated example+translation
    cells, separates multi-example cells, and extracts the `(Adverb)` /
    `(Noun)`-style tags into a structured part-of-speech field per sense.
-   Cases the parser can't confidently resolve are flagged rather than
-   guessed.
+   Cases the parser can't confidently resolve are written to a separate
+   "needs review" list rather than guessed, for the batch pass below to
+   resolve.
 2. **Claude Code batch pass** (interactive, no separate API token needed):
    run in batches over the parser's output to validate translations, fix
    entries the parser flagged, and generate the missing **related words**
@@ -110,10 +120,16 @@ redeploy the dataset.
 - `GET /` (the polling endpoint), query params populated by TRMNL from
   Custom Fields:
   - `levels` — comma-separated levels to include (default: all)
-  - `exclude` — comma-separated words/IDs to exclude (default: none)
+  - `exclude` — comma-separated German words to exclude, matched against
+    the dataset's word field case-insensitively after trimming whitespace
+    (default: none)
 - Behavior: filter the dataset by the above, pick one random entry, return
   it as JSON shaped for the Liquid template (word, article/POS,
   translation, example sentence, related words).
+- Response must be **flat JSON at the root level** (TRMNL's merge-variable
+  access expects root-level fields as `##{{ field_name }}`; nested objects
+  would need explicit dot-path syntax) — keep the shape flat to avoid that
+  extra complexity in the template.
 - Unrecognized/malformed params are ignored and fall back to defaults
   rather than erroring.
 
