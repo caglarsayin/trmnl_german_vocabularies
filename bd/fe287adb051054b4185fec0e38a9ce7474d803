@@ -1,0 +1,21 @@
+pipeline/tests/test_examples.py
+  s_0cb6b87c93d5f3::t_96c51d03ff33aa 1-85
+pipeline/lib/examples.py
+  s_0cb6b87c93d5f3::t_622b68258cf1f1 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "bdfe287adb051054b4185fec0e38a9ce7474d803",
+  "prompts": {},
+  "sessions": {
+    "s_0cb6b87c93d5f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f64f8e8-c887-4c4a-8e6c-fba7dd3e5688",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
