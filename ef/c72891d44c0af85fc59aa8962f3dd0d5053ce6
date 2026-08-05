@@ -1,0 +1,29 @@
+docs/superpowers/plans/2026-08-05-trmnl-german-vocab-plugin-plan.md
+  s_0cb6b87c93d5f3::t_cb82303c810fd0 1132-1133
+  s_0cb6b87c93d5f3::t_6dd7ff35c70062 835
+  s_0cb6b87c93d5f3::t_ae61c658a0970f 1-834,836-1131,1134-2175
+docs/superpowers/specs/2026-08-05-trmnl-german-vocab-plugin-design.md
+  s_0cb6b87c93d5f3::t_cd42fb88dcb128 233-237
+  s_0cb6b87c93d5f3::t_4413b8e4601d68 319-320
+  s_0cb6b87c93d5f3::t_b991edbd304d4e 389
+  s_0cb6b87c93d5f3::t_663243f07f22e2 217-223,228-230
+  s_0cb6b87c93d5f3::t_9851ac6437d6d2 89,91-94,97-117
+  s_0cb6b87c93d5f3::t_2d0c248f21a968 398-409
+  s_0cb6b87c93d5f3::t_71d6dbe10c9931 126-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "efc72891d44c0af85fc59aa8962f3dd0d5053ce6",
+  "prompts": {},
+  "sessions": {
+    "s_0cb6b87c93d5f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f64f8e8-c887-4c4a-8e6c-fba7dd3e5688",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
