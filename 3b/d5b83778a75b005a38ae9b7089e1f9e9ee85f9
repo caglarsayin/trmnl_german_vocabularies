@@ -1,0 +1,21 @@
+pipeline/lib/grammar.py
+  s_0cb6b87c93d5f3::t_2afe8241304e97 1-68
+pipeline/tests/test_grammar.py
+  s_0cb6b87c93d5f3::t_fdc6e44069193f 1-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3bd5b83778a75b005a38ae9b7089e1f9e9ee85f9",
+  "prompts": {},
+  "sessions": {
+    "s_0cb6b87c93d5f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f64f8e8-c887-4c4a-8e6c-fba7dd3e5688",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
