@@ -1,6 +1,6 @@
 {% template header_badge %}
 {% if level != "" or pos != "" %}
-<div class="label label--small label--gray-out md:label--large lg:label--xxlarge">{{ level }} · {{ pos | upcase }}</div>
+<div class="label label--small label--gray-out">{{ level }} · {{ pos | upcase }}</div>
 {% endif %}
 {% endtemplate %}
 
@@ -13,6 +13,6 @@
 
 {% template grammar_related_block %}
 {% if grammar_text != "" or related_text != "" %}
-<div class="label label--small label--gray-out md:label--large lg:label--xlarge">{% if grammar_text != "" %}{{ grammar_text }}{% endif %}{% if grammar_text != "" and related_text != "" %} · {% endif %}{% if related_text != "" %}Related: {{ related_text }}{% endif %}</div>
+<div class="label label--small label--gray-out">{% if grammar_text != "" %}{{ grammar_text }}{% endif %}{% if grammar_text != "" and related_text != "" %} · {% endif %}{% if related_text != "" %}Related: {{ related_text }}{% endif %}</div>
 {% endif %}
 {% endtemplate %}
