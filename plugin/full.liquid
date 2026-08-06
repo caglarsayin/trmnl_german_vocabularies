@@ -1,19 +1,13 @@
-<div class="layout layout--col layout--stretch-x gap--large">
-  <div class="flex flex--row flex--between">
-    <div class="title--xxlarge">{{ word }}</div>
-    {% render "header_badge", level: level, pos: pos %}
-  </div>
+<div class="layout layout--col layout--stretch-x gap--medium">
+  {% render "header_badge", level: level, pos: pos %}
+  <div class="value--xlarge">{{ word }}</div>
+  <div class="description">{{ translation }}</div>
   <div class="divider"></div>
-  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
-  <div class="flex flex--row gap--large stretch-y">
-    <div class="grow">
-      {% render "example_block", example_de: example_de, example_en: example_en %}
-    </div>
-    {% if grammar_text != "" or related_text != "" %}
-    <div class="divider--v"></div>
-    <div class="basis--60">
-      {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
-    </div>
-    {% endif %}
+  <div class="grow flex flex--col flex--center-y">
+    {% render "example_block", example_de: example_de, example_en: example_en %}
   </div>
+  {% if grammar_text != "" or related_text != "" %}
+  <div class="divider"></div>
+  {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
+  {% endif %}
 </div>
