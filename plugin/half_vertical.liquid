@@ -1,7 +1,7 @@
 <div class="layout layout--col layout--stretch-x layout--center-y gap--small">
   {% render "header_badge", level: level, pos: pos %}
-  <div class="title">{{ word }}</div>
-  <div class="description">{{ translation }}</div>
+  <div class="title md:title--large lg:title--xlarge">{{ word }}</div>
+  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
   <div class="label">Example</div>
   {% render "example_block", example_de: example_de, example_en: example_en %}
 </div>

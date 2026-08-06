@@ -1,10 +1,10 @@
 <div class="layout layout--col gap--large">
   <div class="flex flex--row flex--between">
-    <div class="title">{{ word }}</div>
+    <div class="title md:title--large lg:title--xlarge">{{ word }}</div>
     {% render "header_badge", level: level, pos: pos %}
   </div>
   <div class="divider"></div>
-  <div class="description">{{ translation }}</div>
+  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
   <div class="flex flex--row gap--large stretch-y">
     <div class="basis--60">
       <div class="label">Example</div>
