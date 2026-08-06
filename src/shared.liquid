@@ -1,0 +1,18 @@
+{% template header_badge %}
+{% if level != "" or pos != "" %}
+<div class="label label--small label--gray-out">{{ level }} · {{ pos | upcase }}</div>
+{% endif %}
+{% endtemplate %}
+
+{% template example_block %}
+{% if example_de != "" %}
+<div class="value--small md:value--base lg:value--large">{{ example_de }}</div>
+<div class="description md:description--large lg:description--xlarge">{{ example_en }}</div>
+{% endif %}
+{% endtemplate %}
+
+{% template grammar_related_block %}
+{% if grammar_text != "" or related_text != "" %}
+<div class="label label--small label--gray-out">{% if grammar_text != "" %}{{ grammar_text }}{% endif %}{% if grammar_text != "" and related_text != "" %} · {% endif %}{% if related_text != "" %}Related: {{ related_text }}{% endif %}</div>
+{% endif %}
+{% endtemplate %}

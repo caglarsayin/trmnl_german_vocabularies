@@ -1,0 +1,13 @@
+<div class="layout layout--col layout--stretch-x gap--medium">
+  {% render "header_badge", level: level, pos: pos %}
+  <div class="value--xlarge">{{ word }}</div>
+  <div class="description">{{ translation }}</div>
+  <div class="divider"></div>
+  <div class="grow">
+    {% render "example_block", example_de: example_de, example_en: example_en %}
+  </div>
+  {% if grammar_text != "" or related_text != "" %}
+  <div class="divider"></div>
+  {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
+  {% endif %}
+</div>
