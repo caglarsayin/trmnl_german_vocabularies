@@ -70,28 +70,31 @@ Fixture data for local verification throughout: `pipeline/fixtures/vocab.sample.
 
 - [ ] **Step 2: Write `plugin/full.liquid` (Option B — header row + two-column body)**
 
+**Superseded — see below.** This code sample uses two anti-patterns that were found and fixed during Task 1/final-review: hand-rolled inline `style="..."` (fights the framework's own layout system) and a redundant `<div class="screen ..."><div class="view ...">` wrapper (trmnlp/TRMNL already supplies this automatically around a size file's output; the extra wrapper forces content to lay out at full screen width regardless of the actual slot size). The actual, final `full.liquid` (after all fix rounds, including the final-review column-sizing and empty-state fixes) is:
+
 ```liquid
-<div class="screen screen--og">
-  <div class="view view--full">
-    <div class="layout" style="display:flex; flex-direction:column; height:100%; padding:24px 32px; box-sizing:border-box;">
-      <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:2px solid #000; padding-bottom:12px; margin-bottom:16px;">
-        <div class="title">{{ word }}</div>
-        {% render "header_badge", level: level, pos: pos %}
-      </div>
-      <div class="description" style="margin-bottom:16px;">{{ translation }}</div>
-      <div style="flex:1; display:flex; gap:24px;">
-        <div style="flex:1.4; border-right:1px solid #000; padding-right:24px;">
-          <div class="label">Example</div>
-          {% render "example_block", example_de: example_de, example_en: example_en %}
-        </div>
-        <div style="flex:1;">
-          {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
-        </div>
-      </div>
+<div class="layout layout--col gap--large">
+  <div class="flex flex--row flex--between">
+    <div class="title md:title--large lg:title--xlarge">{{ word }}</div>
+    {% render "header_badge", level: level, pos: pos %}
+  </div>
+  <div class="divider"></div>
+  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
+  <div class="flex flex--row gap--large stretch-y">
+    <div class="grow">
+      {% render "example_block", example_de: example_de, example_en: example_en %}
     </div>
+    {% if grammar_text != "" or related_text != "" %}
+    <div class="divider--v"></div>
+    <div class="basis--60">
+      {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
+    </div>
+    {% endif %}
   </div>
 </div>
 ```
+
+Note the example column is `grow` (flexible width) and the grammar/related column is `basis--60` (fixed 240px) — not the reverse. `basis--N` classes are fixed-pixel (`N × 4px`), not percentages; giving the fixed narrow width to the long-text column was a real bug caught in final review.
 
 - [ ] **Step 3: Install/confirm `trmnlp` is available**
 
@@ -127,21 +130,18 @@ git commit -m "Redesign full.liquid: header row + two-column body, extract share
 
 - [ ] **Step 1: Write `plugin/half_horizontal.liquid`**
 
-Half width, full height — narrow and tall, so content stacks vertically (word, badge, translation, example), not side-by-side like `full.liquid`:
+**Superseded — see below.** Same two anti-patterns as Task 1's original sample (inline `style`, redundant screen/view wrapper), plus this shape assumption (narrow/tall) was itself corrected — this file is actually full-width/half-height. Final content (identical to `half_vertical.liquid`'s final content — both sizes show the same stacked content, only the outer chrome trmnlp/TRMNL supplies differs by filename):
 
 ```liquid
-<div class="screen screen--og">
-  <div class="view view--half_horizontal">
-    <div class="layout" style="display:flex; flex-direction:column; justify-content:center; height:100%; padding:16px 20px; box-sizing:border-box;">
-      {% render "header_badge", level: level, pos: pos %}
-      <div class="title" style="margin:6px 0;">{{ word }}</div>
-      <div class="description" style="margin-bottom:12px;">{{ translation }}</div>
-      <div class="label">Example</div>
-      {% render "example_block", example_de: example_de, example_en: example_en %}
-    </div>
-  </div>
+<div class="layout layout--col layout--stretch-x layout--center-y gap--small">
+  {% render "header_badge", level: level, pos: pos %}
+  <div class="title md:title--large lg:title--xlarge">{{ word }}</div>
+  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
+  {% render "example_block", example_de: example_de, example_en: example_en %}
 </div>
 ```
+
+(`layout--center` was tried first and found buggy — its shrink-to-fit sizing let long text overflow the narrow half-width box instead of wrapping. `layout--stretch-x layout--center-y` fixes that. The `Example` label is inside the `example_block` partial now, not duplicated here.)
 
 - [ ] **Step 2: Preview locally**
 
@@ -171,19 +171,14 @@ git commit -m "Add half_horizontal layout: stacked word/badge/translation/exampl
 
 - [ ] **Step 1: Write `plugin/half_vertical.liquid`**
 
-Half width, full height — narrow and tall. Use the same `layout--col layout--center` stacked pattern as `half_horizontal.liquid` (Task 2), only the `view--*` class differs:
+**Superseded — see below.** This sample still has the redundant screen/view wrapper (removed during final review — trmnlp/TRMNL supplies it automatically) and `layout--center` (found buggy for narrow boxes — shrink-to-fit sizing let long text overflow instead of wrap; replaced with `layout--stretch-x layout--center-y`). Final content (identical to `half_horizontal.liquid`'s final content):
 
 ```liquid
-<div class="screen screen--og">
-  <div class="view view--half_vertical">
-    <div class="layout layout--col layout--center gap--small">
-      {% render "header_badge", level: level, pos: pos %}
-      <div class="title">{{ word }}</div>
-      <div class="description">{{ translation }}</div>
-      <div class="label">Example</div>
-      {% render "example_block", example_de: example_de, example_en: example_en %}
-    </div>
-  </div>
+<div class="layout layout--col layout--stretch-x layout--center-y gap--small">
+  {% render "header_badge", level: level, pos: pos %}
+  <div class="title md:title--large lg:title--xlarge">{{ word }}</div>
+  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
+  {% render "example_block", example_de: example_de, example_en: example_en %}
 </div>
 ```
 
@@ -215,16 +210,16 @@ git commit -m "Add half_vertical layout: header row + translation/example, no gr
 
 - [ ] **Step 1: Write `plugin/quadrant.liquid`**
 
+**Superseded — see below.** Same anti-patterns (inline `style`, redundant wrapper). Final content:
+
 ```liquid
-<div class="screen screen--og">
-  <div class="view view--quadrant">
-    <div class="layout" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:10px; box-sizing:border-box;">
-      <div class="title">{{ word }}</div>
-      <div class="description">{{ translation }}</div>
-    </div>
-  </div>
+<div class="layout layout--col layout--stretch-x layout--center-y gap--small">
+  <div class="title">{{ word }}</div>
+  <div class="description">{{ translation }}</div>
 </div>
 ```
+
+(This file uses no `shared.liquid` partials and was unaffected by the final-review empty-state/column-sizing fixes, which only touched `full.liquid`/`half_horizontal.liquid`/`half_vertical.liquid` and the partials they render.)
 
 - [ ] **Step 2: Preview locally**
 
@@ -247,17 +242,17 @@ git commit -m "Add quadrant layout: word and translation only"
 ### Task 5: Device-responsive sizing + full cross-size regression check
 
 **Files:**
-- Modify: `plugin/full.liquid`, `plugin/half_horizontal.liquid`, `plugin/half_vertical.liquid` (add responsive classes to text elements)
+- Modify: `plugin/shared.liquid`, `plugin/full.liquid`, `plugin/half_horizontal.liquid`, `plugin/half_vertical.liquid` (add responsive classes to text elements — `shared.liquid` needed one edit too, for the `.value`/`.description` inside `example_block`, since it's the shared partial all three size files render). `plugin/quadrant.liquid` intentionally excluded — smallest size, showing only word+translation, left at base sizing rather than adding another asymmetric special case.
 
 **Interfaces:** none — this task only adds CSS class modifiers to existing markup, no new partials or parameters.
 
 - [ ] **Step 1: Verify the actual responsive modifier class names before using them**
 
-Fetch `https://trmnl.com/framework/docs/v2/responsive` (or the local framework docs if `trmnlp` bundles them) and confirm which typography classes have documented `md:`/`lg:` modifiers. One confirmed example from that page: `<span class="value md:value--large lg:value--xlarge">`. Check specifically whether `.title` has equivalent `--large`/`--xlarge` (or similarly named) modifiers documented. **Do not invent a modifier class name that isn't documented** — if `.title` has no documented size modifier, leave its size as-is at this pass and note that in your report rather than guessing.
+Confirmed directly against the downloaded framework CSS (`grep` for `md:`/`lg:` prefixed rules — more reliable than re-fetching the docs page): `.title`, `.value`, `.description`, and `.label` ALL have documented `md:`/`lg:` modifiers (`--large`/`--xlarge`/`--xxlarge`). `.title` does have modifiers — the original uncertainty here was unfounded. **Do not invent a modifier class name that isn't confirmed this way.**
 
 - [ ] **Step 2: Apply confirmed responsive classes**
 
-Using only what Step 1 confirmed, add `md:`/`lg:`-prefixed modifier classes to the `.value`/`.description` elements (translation, example) in `full.liquid`, `half_horizontal.liquid`, and `half_vertical.liquid` — e.g., if Step 1 confirms `value md:value--large lg:value--xlarge` is valid, apply that pattern to the `.value`-classed example text in each file. Leave `.title` (the word) at its current explicit inline size unless Step 1 found a confirmed modifier for it too.
+Add `md:title--large lg:title--xlarge` to the `.title` (word) element, and `md:description--large lg:description--xlarge` to the `.description` (translation) element, in each of `full.liquid`, `half_horizontal.liquid`, `half_vertical.liquid`. Add `md:value--large lg:value--xlarge` / `md:description--large lg:description--xlarge` to the `.value`/`.description` pair inside `shared.liquid`'s `example_block` partial (one edit covers all three consumers).
 
 - [ ] **Step 3: Full cross-size regression check**
 
