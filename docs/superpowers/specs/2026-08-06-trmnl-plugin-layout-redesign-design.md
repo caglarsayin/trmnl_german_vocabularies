@@ -71,8 +71,8 @@ plugin/
 ├── settings.yml            (unchanged from the working plugin)
 ├── shared.liquid            (new — reusable {% template %} partials)
 ├── full.liquid               (Option B, full detail)
-├── half_horizontal.liquid    (side-by-side: half width, full height)
-├── half_vertical.liquid      (stacked: full width, half height)
+├── half_horizontal.liquid    (stacked: full width, half height)
+├── half_vertical.liquid      (side-by-side: half width, full height)
 └── quadrant.liquid           (quarter screen)
 ```
 
@@ -95,6 +95,9 @@ views against live data and visually inspecting the output shape.
 across sizes — a header-badge partial (level/POS), an example-block
 partial, and a grammar/related-block partial — and each size file
 `{% render %}`s only the ones it has room for.
+
+**Structural correction found mid-implementation (Task 1/2/3 fix round):**
+none of the four size files should wrap their content in `<div class="screen ...">`/`<div class="view ...">` — `trmnlp`'s own dev server (and, by the same mechanism, the real TRMNL renderer) already supplies that wrapper around whatever a size file outputs, sizing it to the correct slot (full screen, or one grid cell of a `mashup--1Tx1B`/`mashup--1Lx1R`/`mashup--2x2` grid for the smaller sizes). Confirmed by running `trmnlp init` in a scratch directory and inspecting its generated scaffold, which starts every size file directly with `<div class="layout ...">` — no screen/view wrapper. Every size file we'd written through Task 3 included that wrapper redundantly; it happened to cause no visible symptom on `full` (the duplicate inner `.screen` renders at the same 800×480 dimensions the outer one already provides, so nothing clips), but on every smaller size it forced the content to lay out as if it had the full screen's width available, then get invisibly clipped down to the actual (narrower) grid-cell width by the outer wrapper's `overflow: hidden` — this was the real cause of text cutting off mid-word in the half sizes, not the `layout--center` vs `layout--stretch-x` choice (that was a real, separate, secondary bug, also fixed).
 
 ## Content per layout size
 
