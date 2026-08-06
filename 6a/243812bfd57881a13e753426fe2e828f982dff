@@ -1,0 +1,27 @@
+plugin/quadrant.liquid
+  s_164cf2779c42d2::t_07c0c6cdae5e6a 2
+plugin/half_horizontal.liquid
+  s_164cf2779c42d2::t_4e5e7027ead0b0 3
+plugin/full.liquid
+  s_164cf2779c42d2::t_c810c9ec27241f 3
+plugin/half_vertical.liquid
+  s_164cf2779c42d2::t_9fd957b6da6c0a 3
+plugin/shared.liquid
+  s_164cf2779c42d2::t_eda535b072b24e 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6a243812bfd57881a13e753426fe2e828f982dff",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
