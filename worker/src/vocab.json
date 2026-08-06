@@ -1,0 +1,92 @@
+[
+  {
+    "id": "das-mitglied", "level": "A2", "word": "das Mitglied", "lemma": "Mitglied",
+    "article": "das", "pos": "Noun",
+    "translation": "member (of an organization), participant",
+    "example_de": "Neue Mitglieder sind willkommen.", "example_en": "New members are welcome.",
+    "grammar": {"type": "noun_forms", "lines": ["Singular: das Mitglied", "Plural: die Mitglieder"]},
+    "related": [{"word": "die Mitgliedschaft", "relation": "same_root", "source": "mechanical_validated"}]
+  },
+  {
+    "id": "blitzen", "level": "B1", "word": "blitzen", "lemma": "blitzen",
+    "article": null, "pos": "Verb",
+    "translation": "to flash (lightning), to gleam",
+    "example_de": "Es blitzt und donnert seit einer Stunde ununterbrochen am Himmel.",
+    "example_en": "It has been flashing and thundering nonstop in the sky for an hour.",
+    "grammar": {"type": "verb_conjugations", "lines": ["Partizip II: geblitzt (regelmäßig)"]},
+    "related": [{"word": "der Blitz", "relation": "same_root", "source": "mechanical_validated"}]
+  },
+  {
+    "id": "entspannend", "level": "A2", "word": "entspannend", "lemma": "entspannend",
+    "article": null, "pos": "Adjective",
+    "translation": "relaxing, soothing, unwinding",
+    "example_de": "Das war die entspannendste Massage, die ich je hatte.",
+    "example_en": "That was the most relaxing massage I have ever had.",
+    "grammar": {"type": "degrees_of_comparison", "lines": ["Comparative: entspannender", "Superlative: am entspannendsten"]},
+    "related": [{"word": "anstrengend", "relation": "opposite", "source": "generated"}]
+  },
+  {
+    "id": "oben", "level": "A1", "word": "oben", "lemma": "oben",
+    "article": null, "pos": "Adverb",
+    "translation": "above, upstairs, at the top",
+    "example_de": "Das Buch liegt oben.", "example_en": "The book is on top.",
+    "grammar": null,
+    "related": [], "related_none": true
+  },
+  {
+    "id": "sofort", "level": "A2", "word": "sofort", "lemma": "sofort",
+    "article": null, "pos": "Adverb",
+    "translation": "immediately, right away, at once",
+    "example_de": "Ich komme sofort.", "example_en": "I'm coming right away.",
+    "grammar": null,
+    "related": [
+      {"word": "gleich", "relation": "synonym", "source": "generated"},
+      {"word": "später", "relation": "opposite", "source": "generated"},
+      {"word": "sogleich", "relation": "synonym", "source": "generated"},
+      {"word": "unverzüglich", "relation": "synonym", "source": "generated"}
+    ]
+  },
+  {
+    "id": "der-baum", "level": "A1", "word": "der Baum", "lemma": "Baum",
+    "article": "der", "pos": "Noun",
+    "translation": "tree",
+    "example_de": "Der Baum ist grün.", "example_en": "The tree is green.",
+    "grammar": {"type": "noun_forms", "lines": ["Singular: der Baum", "Plural: die Bäume"]},
+    "related": [{"word": "der Wald", "relation": "same_root", "source": "generated"}]
+  },
+  {
+    "id": "schnell", "level": "A1", "word": "schnell", "lemma": "schnell",
+    "article": null, "pos": "Adjective",
+    "translation": "fast, quick",
+    "example_de": "Das Auto ist schnell.", "example_en": "The car is fast.",
+    "grammar": {"type": "degrees_of_comparison", "lines": ["Comparative: schneller", "Superlative: am schnellsten"]},
+    "related": [{"word": "langsam", "relation": "opposite", "source": "generated"}]
+  },
+  {
+    "id": "die-übersetzung", "level": "B1", "word": "die Übersetzung", "lemma": "Übersetzung",
+    "article": "die", "pos": "Noun",
+    "translation": "translation, translated version",
+    "example_de": "Die Übersetzung dieses Fachbuchs ins Japanische war eine echte Herausforderung für das gesamte Team.",
+    "example_en": "Translating this technical book into Japanese was a real challenge for the whole team.",
+    "grammar": {"type": "noun_forms", "lines": ["Singular: die Übersetzung", "Plural: die Übersetzungen"]},
+    "related": [{"word": "übersetzen", "relation": "verb_form", "source": "mechanical_validated"}]
+  },
+  {
+    "id": "wichtig", "level": "A2", "word": "wichtig", "lemma": "wichtig",
+    "article": null, "pos": "Adjective",
+    "translation": "important",
+    "example_de": "Das Meeting war heute erstaunlich wichtig für alle Beteiligten im Projekt.",
+    "example_en": "The meeting was surprisingly important today for everyone involved in the project.",
+    "grammar": {"type": "degrees_of_comparison", "lines": ["Comparative: wichtiger", "Superlative: am wichtigsten"]},
+    "related": [{"word": "unwichtig", "relation": "opposite", "source": "generated"}]
+  },
+  {
+    "id": "überzeugen", "level": "B1", "word": "überzeugen", "lemma": "überzeugen",
+    "article": null, "pos": "Verb",
+    "translation": "to convince, to persuade",
+    "example_de": "Es dauerte lange, aber am Ende konnte sie ihn mit guten Argumenten vollständig überzeugen.",
+    "example_en": "It took a while, but in the end she was able to fully convince him with good arguments.",
+    "grammar": {"type": "verb_conjugations", "lines": ["Partizip II: überzeugt (regelmäßig)"]},
+    "related": [{"word": "die Überzeugung", "relation": "noun_form", "source": "mechanical_validated"}]
+  }
+]
