@@ -42,7 +42,6 @@ custom_fields:
 - keyname: exclude
   field_type: multi_string
   name: Words to exclude
-  optional: true
 name: German Vocab
 description: ''
 refresh_interval: 15
