@@ -1,0 +1,21 @@
+.gitignore
+  s_164cf2779c42d2::t_367de05d030476 7
+docs/superpowers/specs/2026-08-06-trmnl-plugin-layout-redesign-design.md
+  s_164cf2779c42d2::t_9567d76da36be5 1-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3574245ca44e658a2adf3e665e209822eb7ec365",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
