@@ -1,0 +1,26 @@
+docs/superpowers/plans/2026-08-06-trmnl-plugin-layout-redesign-plan.md
+  s_164cf2779c42d2::t_fd86d1e2ef0656 213-214,216-218,222
+  s_164cf2779c42d2::t_1c17a1d012ba01 245,251,255
+  s_164cf2779c42d2::t_0f7fae2efc16ca 133,136-140,144
+  s_164cf2779c42d2::t_ffad0d9ade0173 73-74,76-90,92,97
+  s_164cf2779c42d2::t_8c41595dcd24e9 174,177-181
+  s_164cf2779c42d2::t_f66daf5a924c26 98
+  s_164cf2779c42d2::t_4d1a03d0ce585d 145
+  s_164cf2779c42d2::t_70f1a04b3a0d83 223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "567db9bb9abc8cd97bfe870979b2736e171ff4a0",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
