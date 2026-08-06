@@ -1,0 +1,30 @@
+worker/package.json
+  s_164cf2779c42d2::t_f7cb14af86672f 6
+  s_164cf2779c42d2::t_5b0f05cce4b46c 1-5,7-13
+worker/src/response.js
+  s_164cf2779c42d2::t_3bd24a6fe4d5e8 1-37
+worker/test/response.test.js
+  s_164cf2779c42d2::t_d4cce0bc4efffd 1-60
+worker/src/filter.js
+  s_164cf2779c42d2::t_44f9f5d7c229ed 1-35
+worker/src/vocab.json
+  s_164cf2779c42d2::t_e25ce0f542d7fd 1-92
+worker/test/filter.test.js
+  s_164cf2779c42d2::t_fdb06f25347661 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "93257c68708e77ee92abf1101198d383625d8219",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
