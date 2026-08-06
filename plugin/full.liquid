@@ -1,0 +1,17 @@
+<div class="screen screen--og">
+  <div class="view view--full">
+    <div class="layout layout--col layout--center">
+      <div class="label">{{ level }} · {{ pos }}</div>
+      <div class="title">{{ word }}</div>
+      <div class="description">{{ translation }}</div>
+      <div class="value">{{ example_de }}</div>
+      <div class="description">{{ example_en }}</div>
+      {% if grammar_text != "" %}
+      <div class="label">{{ grammar_text }}</div>
+      {% endif %}
+      {% if related_text != "" %}
+      <div class="description">Related: {{ related_text }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>

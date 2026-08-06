@@ -1,0 +1,17 @@
+name: German Vocabulary Flashcard
+strategy: polling
+polling_verb: GET
+polling_url: "https://trmnl-german-vocab.caglar-dbd.workers.dev/?levels={{ levels }}&exclude={{ exclude }}"
+refresh_interval: 60
+custom_fields:
+  - keyname: levels
+    field_type: select
+    name: "Levels to include"
+    multiple: true
+    options:
+      - "A1"
+      - "A2"
+      - "B1"
+  - keyname: exclude
+    field_type: multi_string
+    name: "Words to exclude"
