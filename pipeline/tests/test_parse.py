@@ -73,3 +73,11 @@ def test_id_distinguishes_noun_and_verb_sharing_a_lemma():
     by_id = {e["id"]: e for e in entries}
     assert by_id["das-hören"]["pos"] == "Noun"
     assert by_id["hören"]["pos"] == "Verb"
+
+
+def test_translation_is_first_sense_only():
+    entries, _ = run(CSV_PATH)
+    by_id = {e["id"]: e for e in entries}
+    assert by_id["wahrscheinlich"]["translation"] == \
+        "wahrscheinlich (Adverb): probably, likely, in all likelihood"
+    assert max(len(e["translation"]) for e in entries) <= 170

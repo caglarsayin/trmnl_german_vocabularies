@@ -58,3 +58,13 @@ test("buildResponse returns a friendly fallback card for a null entry", () => {
   assert.equal(body.grammar_text, "");
   assert.equal(body.related_text, "");
 });
+
+test("buildResponse uses entry.word for a noun (has an article)", () => {
+  const body = buildResponse({ ...ENTRY, article: "das", word: "das Mitglied", lemma: "Mitglied" });
+  assert.equal(body.word, "das Mitglied");
+});
+
+test("buildResponse uses entry.lemma for a non-noun (no article)", () => {
+  const body = buildResponse({ ...ENTRY, article: null, word: "Wahrscheinlich", lemma: "wahrscheinlich", pos: "Adjective" });
+  assert.equal(body.word, "wahrscheinlich");
+});

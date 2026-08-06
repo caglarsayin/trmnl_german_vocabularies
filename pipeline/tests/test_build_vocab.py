@@ -70,3 +70,23 @@ def test_gate_passes_when_every_word_has_related_or_related_none():
         {"id": "katze", "related": [{"word": "x", "relation": "opposite", "source": "generated"}]},
     ]
     check_completeness(complete)  # should not raise
+
+
+def test_merge_canonicalizes_related_word_casing():
+    parsed = PARSED + [
+        {"id": "blitz", "lemma": "Blitz", "level": "A2", "word": "der Blitz", "article": "der",
+         "pos": "Noun", "translation": "lightning", "example_de": "x.", "example_en": "y.",
+         "grammar": None, "related": []},
+    ]
+    result = {
+        "validated": [
+            {"lemma": "ärgern", "candidate_lemma": "blitz", "valid": True, "relation": "same_root"},
+        ],
+        "generated": [],
+        "needs_review_resolved": [],
+    }
+    merged = merge(parsed, result)
+    by_id = {e["id"]: e for e in merged}
+    assert by_id["argern"]["related"] == [
+        {"word": "der Blitz", "relation": "same_root", "source": "mechanical_validated"}
+    ]

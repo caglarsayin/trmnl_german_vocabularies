@@ -23,7 +23,7 @@ export function buildResponse(entry) {
   const related = (entry.related || []).slice(0, 4);
 
   return {
-    word: entry.word,
+    word: entry.article ? entry.word : entry.lemma,
     article: entry.article || "",
     pos: entry.pos,
     level: entry.level,

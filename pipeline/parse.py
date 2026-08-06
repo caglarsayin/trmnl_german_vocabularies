@@ -36,7 +36,7 @@ def parse_row(row):
     entry_id = make_id(wort)
     article, lemma = extract_article_lemma(wort, klarwort)
     pos = derive_pos(wort, ubersetzung, trailing)
-    translation = first_sense(ubersetzung)
+    translation = clean(first_sense(row.get("Übersetzung") or ""))
 
     cells = [clean(row.get(col)) for col in EXAMPLE_COLUMNS]
     pairs, ambiguous = collect_pairs(cells)

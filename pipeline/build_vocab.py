@@ -9,18 +9,23 @@ from pipeline.lib.schema import validate_entry
 
 def merge(parsed, enrichment_result):
     by_lemma = {entry["lemma"]: dict(entry) for entry in parsed}
+    canonical = {entry["lemma"].lower(): entry["word"] for entry in parsed}
     for entry in by_lemma.values():
         entry["related"] = []
         entry["related_none"] = False
+
+    unmatched = 0
 
     for item in enrichment_result.get("validated", []):
         if not item.get("valid"):
             continue
         entry = by_lemma.get(item["lemma"])
         if entry is None:
+            unmatched += 1
             continue
+        candidate = item["candidate_lemma"]
         entry["related"].append({
-            "word": item["candidate_lemma"],
+            "word": canonical.get(candidate.lower(), candidate),
             "relation": item["relation"],
             "source": "mechanical_validated",
         })
@@ -28,15 +33,20 @@ def merge(parsed, enrichment_result):
     for item in enrichment_result.get("generated", []):
         entry = by_lemma.get(item["lemma"])
         if entry is None:
+            unmatched += 1
             continue
         for link in item.get("related", []):
+            word = link["word"]
             entry["related"].append({
-                "word": link["word"],
+                "word": canonical.get(word.lower(), word),
                 "relation": link["relation"],
                 "source": "generated",
             })
         if item.get("related_none"):
             entry["related_none"] = True
+
+    if unmatched:
+        print(f"warning: {unmatched} enrichment results matched no parsed entry")
 
     return list(by_lemma.values())
 
