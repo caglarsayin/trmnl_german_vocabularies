@@ -1,0 +1,20 @@
+docs/superpowers/specs/2026-08-06-trmnl-plugin-layout-redesign-design.md
+  s_164cf2779c42d2::t_26a8ed4a68ea14 74-75
+  s_164cf2779c42d2::t_8f9c8b87a774db 99-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "21671e0a9f2ca11e38930a6df1ae9cdad0eaf5d1",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
