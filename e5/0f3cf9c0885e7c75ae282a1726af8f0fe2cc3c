@@ -1,0 +1,21 @@
+plugin/half_vertical.liquid
+  s_164cf2779c42d2::t_b90c0f0ff665ea 3
+plugin/half_horizontal.liquid
+  s_164cf2779c42d2::t_601a5542d08720 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "e50f3cf9c0885e7c75ae282a1726af8f0fe2cc3c",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
