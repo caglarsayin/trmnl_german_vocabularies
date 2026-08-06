@@ -275,6 +275,23 @@ model for everything:
    provenance for auditing either tier later without re-running anything.
 4. Validate translations opportunistically while passing over each batch.
 
+**Real gap found running this against the full dataset, not a hypothetical:**
+step 1 and step 2 partition words by whether they *have* a mechanical
+candidate, not by whether that candidate turns out to be *valid* — so a
+word whose only candidate(s) all get validated `false` (e.g. `schwanger`'s
+only candidate, `schwach`, is correctly rejected as unrelated) falls
+through both steps with empty `related` and no `related_none`, failing the
+completeness gate. This hit **110 of the 2,192 words** on the real run.
+Because validation must finish before this leftover set is even knowable,
+running steps 1 and 2 concurrently (as first attempted) misses it — **step
+2's word list must be `(words with no candidate) ∪ (words whose candidates
+were all invalidated in step 1)`, computed after step 1 completes, not
+before it starts.** A future re-run that dispatches both steps concurrently
+again will reproduce this same 110-word gap; route the completeness gate's
+failures back through one more generation batch (same prompt/schema as
+step 2) before treating a run as done, rather than patching the gate
+itself to tolerate them.
+
 `needs_review.json`'s 7 cells are **not** resolved by this pass — every
 one of those rows already has a working example from another cell
 (verified: 0 rows blocked), so an LLM "fix" for the discarded cell would
