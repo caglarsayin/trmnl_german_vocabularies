@@ -1,0 +1,27 @@
+src/full.liquid
+  s_164cf2779c42d2::t_27bb285d2889f4 3-4
+  s_164cf2779c42d2::t_e628e4661c9920 6
+  s_164cf2779c42d2::t_ec73320531d390 1
+.gitignore
+  s_164cf2779c42d2::t_b93251fbbd80c6 9
+src/shared.liquid
+  s_164cf2779c42d2::t_740f142b83a907 3,16
+.trmnlp.yml
+  s_164cf2779c42d2::t_a616f14c05db75 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "02b5fc7fd5af22682c87af8ee811b111ea083a7d",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
