@@ -1,0 +1,19 @@
+.gitignore
+  s_164cf2779c42d2::t_e1364c7b35eb15 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "7dd01154fe08c6abfc7dd8a471366138d08a66da",
+  "prompts": {},
+  "sessions": {
+    "s_164cf2779c42d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca396722-b4f5-4175-b8f8-b128a49e39f1",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "caglar sayin <caglar.sayin@deliveryhero.com>"
+    }
+  }
+}
