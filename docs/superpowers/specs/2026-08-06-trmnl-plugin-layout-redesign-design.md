@@ -76,14 +76,20 @@ plugin/
 └── quadrant.liquid           (quarter screen)
 ```
 
-**Naming note, verified against real TRMNL examples (not assumed) since it
-is easy to get backwards:** `half_horizontal` means the plugin sits in a
-**side-by-side** arrangement (split by a vertical line) — so it gets
-**half width, full height**. `half_vertical` means the plugin is
-**stacked** with another (split by a horizontal line) — so it gets
-**full width, half height**. This is the opposite of what the names might
-suggest at first glance; a first draft of this spec had them backwards
-until checked against an actual example repo's file contents.
+**Naming note, corrected against the authoritative source (the `trmnlp`
+gem's own `Screen` definitions and the TRMNL framework's mashup CSS grid
+rules — not a secondary example repo, which is what an earlier draft of
+this spec relied on and got backwards):** `half_horizontal` means the
+plugin is split from its mashup partner by a **horizontal** line — i.e.
+**stacked, full width, half height** (`trmnlp`'s `HALF_HORIZONTAL` maps to
+CSS class `mashup--1Tx1B`, "1 top × 1 bottom", each spanning the full grid
+width). `half_vertical` means split by a **vertical** line — i.e.
+**side-by-side, half width, full height** (`HALF_VERTICAL` maps to
+`mashup--1Lx1R`, "1 left × 1 right", each spanning the full grid height).
+This matches the more literal reading of the names (a "horizontal split"
+cuts along a horizontal line) and was confirmed two ways: reading
+`trmnlp`'s `lib/trmnlp/screen.rb` source directly, and rendering both
+views against live data and visually inspecting the output shape.
 
 `shared.liquid` defines `{% template %}` blocks for the pieces reused
 across sizes — a header-badge partial (level/POS), an example-block
@@ -95,8 +101,8 @@ partial, and a grammar/related-block partial — and each size file
 | Layout | Dimensions | Shows |
 |---|---|---|
 | `full` | 800×480 (OG) | word, article, level/POS badge, translation, example (DE+EN), grammar block, related words |
-| `half_horizontal` | half width, full height | word, level/POS badge, translation, example (DE+EN, no separate EN line if tight) |
-| `half_vertical` | full width, half height | word, level/POS badge, translation, example (DE only or short) |
+| `half_horizontal` | full width, half height (stacked) | word, level/POS badge, translation, example (DE+EN) |
+| `half_vertical` | half width, full height (side-by-side) | word, level/POS badge, translation, example (DE+EN) |
 | `quadrant` | quarter screen | word, translation only |
 
 Both half sizes drop grammar and related entirely (confirmed via the

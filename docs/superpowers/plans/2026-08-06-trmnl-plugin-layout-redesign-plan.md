@@ -11,7 +11,8 @@
 ## Global Constraints
 
 - Backend/data contract is unchanged: `word`, `article`, `pos`, `level`, `translation`, `example_de`, `example_en`, `grammar_text`, `related_text` are the only fields available (from `worker/src/response.js`'s `buildResponse()`), and they are already flat strings — no nested access needed.
-- `half_horizontal` = side-by-side, **half width, full height**. `half_vertical` = stacked, **full width, half height**. This is verified against real TRMNL examples and is the opposite of what the names might suggest — do not swap these.
+- **CORRECTED mid-execution (Task 2), superseding the line below and the naming used in Tasks 2-3's headers:** `half_horizontal` = **stacked, full width, half height** (split by a horizontal line). `half_vertical` = **side-by-side, half width, full height** (split by a vertical line). Confirmed directly from `trmnlp`'s own `lib/trmnlp/screen.rb` (`HALF_HORIZONTAL` → CSS `mashup--1Tx1B`, "1 top × 1 bottom"; `HALF_VERTICAL` → `mashup--1Lx1R`, "1 left × 1 right") and the framework CSS's grid-row/grid-column rules for those classes, plus a live render. The line below (and Tasks 2/3's original headers/prose) has it backwards — file names below are still correct (`half_horizontal.liquid` really is the file TRMNL expects for the top/bottom slot), only the shape/arrangement description was wrong.
+- ~~`half_horizontal` = side-by-side, **half width, full height**. `half_vertical` = stacked, **full width, half height**. This is verified against real TRMNL examples and is the opposite of what the names might suggest — do not swap these.~~ (superseded above)
 - Content-priority order across sizes, confirmed via mockup: word + translation always shown; example next to drop; grammar + related are the first two things cut as space shrinks. `full` shows everything; `half_horizontal`/`half_vertical` show word+translation+example (no grammar/related); `quadrant` shows word+translation only.
 - Primary verified target is `screen--og` (800×480) — that's the real device. `md:`/`lg:` responsive bumps are best-effort defaults for other devices, not verified on real hardware, and must be described as such.
 - Empty `grammar_text`/`related_text` must omit that section entirely (no empty headings) — same rule as the existing template, applied inside the shared partial now instead of duplicated per size.
@@ -25,8 +26,8 @@ plugin/
 ├── settings.yml            (unchanged)
 ├── shared.liquid            # Task 1 — reusable partials
 ├── full.liquid               # Task 1 — Option B: header row + two-column body
-├── half_horizontal.liquid    # Task 2 — side-by-side, half width/full height
-├── half_vertical.liquid      # Task 3 — stacked, full width/half height
+├── half_horizontal.liquid    # Task 2 — stacked, full width/half height (corrected)
+├── half_vertical.liquid      # Task 3 — side-by-side, half width/full height (corrected)
 └── quadrant.liquid           # Task 4 — word + translation only
 ```
 
@@ -116,7 +117,7 @@ git commit -m "Redesign full.liquid: header row + two-column body, extract share
 
 ---
 
-### Task 2: `half_horizontal.liquid` (side-by-side, half width / full height)
+### Task 2: `half_horizontal.liquid` (CORRECTED shape: stacked, full width / half height — see Global Constraints correction note)
 
 **Files:**
 - Create: `plugin/half_horizontal.liquid`
@@ -160,40 +161,39 @@ git commit -m "Add half_horizontal layout: stacked word/badge/translation/exampl
 
 ---
 
-### Task 3: `half_vertical.liquid` (stacked, full width / half height)
+### Task 3: `half_vertical.liquid` (CORRECTED shape: side-by-side, half width / full height — narrow and tall, see Global Constraints correction note)
 
 **Files:**
 - Create: `plugin/half_vertical.liquid`
 
 **Interfaces:**
-- Consumes: `header_badge`, `example_block` partials from `plugin/shared.liquid` (Task 1). Same content set as Task 2 (word, badge, translation, example — no grammar/related), different arrangement since this size is wide and short rather than narrow and tall.
+- Consumes: `header_badge`, `example_block` partials from `plugin/shared.liquid` (Task 1). Same content set as Task 2 (word, badge, translation, example — no grammar/related). Same stacked/centered arrangement as Task 2 as well — this box is narrow and tall (half width, full height), which a centered vertical stack suits well (this is the pattern Task 2 already built and visually confirmed working, not the header-row pattern originally drafted here before the shape correction).
 
 - [ ] **Step 1: Write `plugin/half_vertical.liquid`**
 
-Full width, half height — wide and short, so word/badge sit in a header row (like `full.liquid`'s pattern) with translation and example below in the remaining vertical space:
+Half width, full height — narrow and tall. Use the same `layout--col layout--center` stacked pattern as `half_horizontal.liquid` (Task 2), only the `view--*` class differs:
 
 ```liquid
 <div class="screen screen--og">
   <div class="view view--half_vertical">
-    <div class="layout" style="display:flex; flex-direction:column; height:100%; padding:14px 20px; box-sizing:border-box; justify-content:center;">
-      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
-        <div class="title">{{ word }}</div>
-        {% render "header_badge", level: level, pos: pos %}
-      </div>
-      <div class="description" style="margin-bottom:8px;">{{ translation }}</div>
+    <div class="layout layout--col layout--center gap--small">
+      {% render "header_badge", level: level, pos: pos %}
+      <div class="title">{{ word }}</div>
+      <div class="description">{{ translation }}</div>
+      <div class="label">Example</div>
       {% render "example_block", example_de: example_de, example_en: example_en %}
     </div>
   </div>
 </div>
 ```
 
-- [ ] **Step 2: Preview locally**
+- [ ] **Step 2: Render and visually verify**
 
-Run `trmnlp serve`, switch to the `half_vertical` layout view.
+Use the same `trmnlp build --png` verification approach used for Tasks 1-2 (see their reports/ledger entries for the exact harness setup) — do not attempt `trmnlp serve` and manual browser interaction, static file rendering is sufficient and has proven reliable.
 
-- [ ] **Step 3: Visual check against outlier fixture entries**
+- [ ] **Step 3: Visual check across sampled words**
 
-Same as Task 2's Step 3, checking this size's proportions (wide/short) specifically — the example text has less vertical room than `half_horizontal`, so re-check the `ubersetzung` entry doesn't clip here even though it passed at the other half size.
+Render several times against the live backend (it returns a random word each call) and confirm: word/badge/translation/example all fit without clipping in the narrower (half-width) box, and no grammar/related content appears.
 
 - [ ] **Step 4: Commit**
 
