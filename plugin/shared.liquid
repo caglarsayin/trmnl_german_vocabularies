@@ -1,0 +1,17 @@
+{% template header_badge %}
+<div class="label">{{ level }} · {{ pos }}</div>
+{% endtemplate %}
+
+{% template example_block %}
+<div class="value">{{ example_de }}</div>
+<div class="description">{{ example_en }}</div>
+{% endtemplate %}
+
+{% template grammar_related_block %}
+{% if grammar_text != "" %}
+<div class="label">{{ grammar_text }}</div>
+{% endif %}
+{% if related_text != "" %}
+<div class="description">Related: {{ related_text }}</div>
+{% endif %}
+{% endtemplate %}

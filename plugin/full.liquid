@@ -1,17 +1,20 @@
 <div class="screen screen--og">
   <div class="view view--full">
-    <div class="layout layout--col layout--center">
-      <div class="label">{{ level }} · {{ pos }}</div>
-      <div class="title">{{ word }}</div>
-      <div class="description">{{ translation }}</div>
-      <div class="value">{{ example_de }}</div>
-      <div class="description">{{ example_en }}</div>
-      {% if grammar_text != "" %}
-      <div class="label">{{ grammar_text }}</div>
-      {% endif %}
-      {% if related_text != "" %}
-      <div class="description">Related: {{ related_text }}</div>
-      {% endif %}
+    <div class="layout" style="display:flex; flex-direction:column; height:100%; padding:24px 32px; box-sizing:border-box;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:2px solid #000; padding-bottom:12px; margin-bottom:16px;">
+        <div class="title">{{ word }}</div>
+        {% render "header_badge", level: level, pos: pos %}
+      </div>
+      <div class="description" style="margin-bottom:16px;">{{ translation }}</div>
+      <div style="flex:1; display:flex; gap:24px;">
+        <div style="flex:1.4; border-right:1px solid #000; padding-right:24px;">
+          <div class="label">Example</div>
+          {% render "example_block", example_de: example_de, example_en: example_en %}
+        </div>
+        <div style="flex:1;">
+          {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
+        </div>
+      </div>
     </div>
   </div>
 </div>
