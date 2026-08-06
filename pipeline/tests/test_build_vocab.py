@@ -90,3 +90,23 @@ def test_merge_canonicalizes_related_word_casing():
     assert by_id["argern"]["related"] == [
         {"word": "der Blitz", "relation": "same_root", "source": "mechanical_validated"}
     ]
+
+
+def test_merge_canonicalizes_non_noun_related_word_to_lowercase_lemma():
+    parsed = PARSED + [
+        {"id": "moeglich", "lemma": "möglich", "level": "A2", "word": "Möglich", "article": None,
+         "pos": "Adjective", "translation": "possible", "example_de": "x.", "example_en": "y.",
+         "grammar": None, "related": []},
+    ]
+    result = {
+        "validated": [
+            {"lemma": "ärgern", "candidate_lemma": "möglich", "valid": True, "relation": "same_root"},
+        ],
+        "generated": [],
+        "needs_review_resolved": [],
+    }
+    merged = merge(parsed, result)
+    by_id = {e["id"]: e for e in merged}
+    assert by_id["argern"]["related"] == [
+        {"word": "möglich", "relation": "same_root", "source": "mechanical_validated"}
+    ]

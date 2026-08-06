@@ -9,7 +9,10 @@ from pipeline.lib.schema import validate_entry
 
 def merge(parsed, enrichment_result):
     by_lemma = {entry["lemma"]: dict(entry) for entry in parsed}
-    canonical = {entry["lemma"].lower(): entry["word"] for entry in parsed}
+    canonical = {
+        entry["lemma"].lower(): (entry["word"] if entry["article"] else entry["lemma"])
+        for entry in parsed
+    }
     for entry in by_lemma.values():
         entry["related"] = []
         entry["related_none"] = False
