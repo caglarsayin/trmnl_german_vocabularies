@@ -34,35 +34,73 @@ unaffected — this is purely the `plugin/` presentation layer.
 - Portrait-orientation-specific tuning beyond what the framework's
   `portrait:` prefix gives for free.
 
-## Approach: three full-screen options compared, then validated for scale-down
+## Approach
+
+### Round 1 (during brainstorming): three full-screen options compared
 
 Three genuinely different visual directions were mocked up (matching real
 content, not lorem ipsum) and compared side-by-side:
 
-- **A — Centered stack** (the current design): word, translation, example,
-  grammar, related, all centered in one vertical column. Rejected: with
-  this much content it reads as one undifferentiated block, no clear
-  visual entry point.
-- **B — Header + two-column body** (chosen): word gets a dedicated header
-  row (left-aligned, level/POS badge to the right, divider beneath).
-  Body splits into two columns: example (wider, left) and
-  grammar+related (narrower, right). Uses the full screen width instead
-  of wasting it on centered whitespace, and gives each category of
-  information its own visual zone.
+- **A — Centered stack** (the original pre-redesign design): word,
+  translation, example, grammar, related, all centered in one vertical
+  column. Rejected: with this much content it reads as one undifferentiated
+  block, no clear visual entry point.
+- **B — Header + two-column body** (chosen initially): word gets a
+  dedicated header row (left-aligned, level/POS badge to the right, divider
+  beneath). Body splits into two columns: example (wider, left) and
+  grammar+related (narrower, right).
 - **C — Sidebar + main content**: a slim permanent left sidebar for
-  level/POS/grammar, main area for word→translation→example. Considered,
-  not chosen — reads well but permanently reserves sidebar width even
-  when grammar is absent for a given word (130-ish rows have no grammar
-  block), wasting space more often than B does.
+  level/POS/grammar, main area for word→translation→example. Not chosen —
+  permanently reserves sidebar width even when grammar is absent (130-ish
+  rows have no grammar block).
 
-Once B was chosen for full-screen, its scale-down behavior across the three
-smaller sizes was validated with the same real content, confirming a
-content-priority order: **word + translation always shown; example next
-to drop; grammar + related are the first two things cut** as space
-shrinks. This was checked visually, not just asserted — at quadrant size
-in particular, keeping example text present alongside word+translation
-produced visible crowding, confirming those should drop together, not
-independently.
+Option B shipped first (Tasks 1-5) and was pushed to the real TRMNL account.
+Once viewed for real (both in TRMNL's own web editor preview and via
+targeted live re-renders), two real problems emerged that hadn't shown up
+in the earlier flat-mockup comparison: the two-column body left roughly
+half the screen height empty for most real words (example/grammar content
+rarely fills a 328px-tall column), and repeated attempts to fix visual
+balance by tweaking individual font sizes weren't addressing the actual
+structural issue.
+
+### Round 2 (post-deployment, after seeing it live): Editorial Hero replaces Option B
+
+A second mockup round compared three fresh directions against the deployed
+Option B, this time informed by what had actually gone wrong:
+
+- **Editorial Hero (chosen):** hero-sized word up top (level/POS as a
+  small muted label above it), translation below, a divider, the example
+  sentence given the full width and vertical space that remains, then —
+  only when there's content for it — a single compact one-line reference
+  strip at the very bottom combining grammar and related info (instead of
+  a tall two-column sidebar).
+- **Accent Band:** a shaded header band behind word+badge, content
+  vertically centered as a group. Not chosen.
+- **Stacked Focus:** everything centered as one flowing column, grammar
+  detail dropped entirely to keep it minimal. Not chosen — loses
+  information Option B had shown.
+
+Editorial Hero fixes both real problems: the compact one-line footer
+(instead of a sidebar) eliminates the dead space, and dropping the
+two-column split means the example sentence gets the FULL screen width
+instead of a fixed ~240px column, which incidentally also fixed a marginal
+overflow risk on the longest real example sentences (a ~103-character
+example that needed 4 tightly-wrapped lines in the 240px column now fits
+in 2, at full width).
+
+This is the current, shipped full-screen design. `half_horizontal.liquid`
+and `half_vertical.liquid` use the same stacked pattern (badge, hero word,
+translation, example — no grammar/related, no footer strip) they always
+did; only `full.liquid` and the three `shared.liquid` partials changed for
+this round.
+
+### Content-priority order (confirmed across both rounds)
+
+**Word + translation always shown; example next to drop; grammar +
+related are the first two things cut** as space shrinks. This was checked
+visually, not just asserted — at quadrant size in particular, keeping
+example text present alongside word+translation produced visible
+crowding, confirming those should drop together, not independently.
 
 ## File structure
 
@@ -103,15 +141,18 @@ none of the four size files should wrap their content in `<div class="screen ...
 
 | Layout | Dimensions | Shows |
 |---|---|---|
-| `full` | 800×480 (OG) | word, article, level/POS badge, translation, example (DE+EN), grammar block, related words |
+| `full` | 800×480 (OG) | hero word, level/POS badge (small, muted, above the word), translation, example (DE+EN), grammar+related (single compact line at the bottom, only when either has content) |
 | `half_horizontal` | full width, half height (stacked) | word, level/POS badge, translation, example (DE+EN) |
 | `half_vertical` | half width, full height (side-by-side) | word, level/POS badge, translation, example (DE+EN) |
 | `quadrant` | quarter screen | word, translation only |
 
 Both half sizes drop grammar and related entirely (confirmed via the
-scale-down mockup) — the distinction between them is arrangement (stacked
-badge above content vs. side-by-side) as space allows, not which fields
-show.
+scale-down mockup). `half_horizontal.liquid` and `half_vertical.liquid`
+are intentionally byte-identical — both use the same stacked (badge, word,
+translation, example) pattern regardless of their real shape difference
+(one is wide/short, the other narrow/tall); a centered vertical stack reads
+fine in both, and TRMNL's own chrome (not this markup) is what actually
+supplies the different `view--*` sizing per file.
 
 ## Device responsiveness
 
