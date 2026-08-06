@@ -1,0 +1,4 @@
+---
+watch:
+  - src
+  - .trmnlp.yml

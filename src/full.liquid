@@ -1,9 +1,9 @@
-<div class="layout layout--col layout--stretch-x gap--medium">
+<div class="layout layout--col layout--stretch-x gap--medium lg:gap--xlarge">
   {% render "header_badge", level: level, pos: pos %}
-  <div class="value--xlarge">{{ word }}</div>
-  <div class="description">{{ translation }}</div>
+  <div class="value--xlarge md:value--xxlarge lg:value--xxxlarge" data-value-fit="true">{{ word }}</div>
+  <div class="description md:description--large lg:description--xlarge">{{ translation }}</div>
   <div class="divider"></div>
-  <div class="grow">
+  <div class="grow lg:flex lg:flex--col lg:flex--center-y">
     {% render "example_block", example_de: example_de, example_en: example_en %}
   </div>
   {% if grammar_text != "" or related_text != "" %}
