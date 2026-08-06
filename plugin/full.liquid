@@ -1,22 +1,18 @@
-<div class="screen screen--og">
-  <div class="view view--full">
-    <div class="layout layout--col gap--large">
-      <div class="flex flex--row flex--between">
-        <div class="title">{{ word }}</div>
-        {% render "header_badge", level: level, pos: pos %}
-      </div>
-      <div class="divider"></div>
-      <div class="description">{{ translation }}</div>
-      <div class="flex flex--row gap--large stretch-y">
-        <div class="basis--60">
-          <div class="label">Example</div>
-          {% render "example_block", example_de: example_de, example_en: example_en %}
-        </div>
-        <div class="divider--v"></div>
-        <div class="grow">
-          {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
-        </div>
-      </div>
+<div class="layout layout--col gap--large">
+  <div class="flex flex--row flex--between">
+    <div class="title">{{ word }}</div>
+    {% render "header_badge", level: level, pos: pos %}
+  </div>
+  <div class="divider"></div>
+  <div class="description">{{ translation }}</div>
+  <div class="flex flex--row gap--large stretch-y">
+    <div class="basis--60">
+      <div class="label">Example</div>
+      {% render "example_block", example_de: example_de, example_en: example_en %}
+    </div>
+    <div class="divider--v"></div>
+    <div class="grow">
+      {% render "grammar_related_block", grammar_text: grammar_text, related_text: related_text %}
     </div>
   </div>
 </div>
